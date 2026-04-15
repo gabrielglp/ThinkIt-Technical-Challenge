@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -16,8 +16,6 @@ class OrderStatus(str, Enum):
 
 @dataclass(frozen=True)
 class OrderFilters:
-    """Value object que encapsula todos os critérios de busca de pedidos."""
-
     status: OrderStatus | None = None
     date_from: datetime | None = None
     date_to: datetime | None = None
@@ -28,8 +26,6 @@ class OrderFilters:
 
 @dataclass(frozen=True)
 class Pagination:
-    """Value object de controle de paginação."""
-
     page: int = 1
     page_size: int = 20
 
@@ -46,8 +42,6 @@ class Pagination:
 
 @dataclass(frozen=True)
 class PaginatedResult(Generic[T]):
-    """Value object genérico de resultado paginado."""
-
     items: list[T]
     total: int
     page: int

@@ -1,8 +1,3 @@
-"""
-Domain entities — puras, sem dependência de ORM, framework ou banco.
-Imutáveis (frozen=True) para garantir consistência entre camadas.
-"""
-
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -41,8 +36,6 @@ class OrderItem:
 
 @dataclass(frozen=True)
 class Order:
-    """Entidade de pedido — usada na listagem paginada."""
-
     order_id: str
     customer_id: str
     customer_name: str
@@ -54,8 +47,6 @@ class Order:
 
 @dataclass(frozen=True)
 class OrderDetail:
-    """Entidade de pedido com todos os dados — usada no endpoint de detalhe."""
-
     order_id: str
     customer: Customer
     status: OrderStatus
