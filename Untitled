@@ -1,0 +1,109 @@
+PS C:\Users\gabri\Documentos\desafio\ThinkIt-Technical-Challenge> docker-compose --profile etl up etl --build
+#1 [internal] load local bake definitions
+#1 reading from stdin 631B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.28kB done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 0.7s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.1s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [builder 1/6] FROM docker.io/library/python:3.12-slim@sha256:804ddf3251a60bbf9c92e73b7566c40428d54d0e79d3428194edf40da6521286
+#6 resolve docker.io/library/python:3.12-slim@sha256:804ddf3251a60bbf9c92e73b7566c40428d54d0e79d3428194edf40da6521286 0.1s done
+#6 DONE 0.1s
+
+#5 [internal] load build context
+#5 transferring context: 3.72kB 0.0s done
+#5 DONE 0.1s
+
+#7 [builder 4/6] RUN python -m venv /opt/venv
+#7 CACHED
+
+#8 [builder 6/6] RUN pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir -r requirements.txt
+#8 CACHED
+
+#9 [builder 2/6] WORKDIR /app
+#9 CACHED
+
+#10 [builder 3/6] RUN apt-get update && apt-get install -y --no-install-recommends     gcc     libpq-dev     && rm -rf /var/lib/apt/lists/*
+#10 CACHED
+
+#11 [builder 5/6] COPY requirements.txt .
+#11 CACHED
+
+#12 [runtime 4/7] COPY --from=builder /opt/venv /opt/venv
+#12 CACHED
+
+#13 [runtime 3/7] RUN apt-get update && apt-get install -y --no-install-recommends     libpq5     && rm -rf /var/lib/apt/lists/*
+#13 CACHED
+
+#14 [runtime 5/7] RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+#14 CACHED
+
+#15 [runtime 6/7] COPY --chown=appuser:appgroup . .
+#15 DONE 0.3s
+
+#16 [runtime 7/7] RUN mkdir -p /app/data && chown -R appuser:appgroup /app
+#16 DONE 1.0s
+
+#17 exporting to image
+#17 exporting layers 0.1s done
+#17 exporting manifest sha256:ae45b1c59e92c9095b0c21594e082b28aab0736292b6bfc410e40055e10e925d 0.0s done
+#17 exporting config sha256:e870c8768431e5ba3b14cbac8625698caadf30869dae2bfe6131eeec716faf24 0.0s done
+#17 exporting attestation manifest sha256:4af2a9bac66707fae3b51594b1d28b2bb6cccdf3313adde4bf54f9551e376cdf 0.0s done
+#17 exporting manifest list sha256:cbcfd815d4a2802ea5fd998ba937440ae85f06ccc1d8593bc6c1c5a50840f248 0.0s done
+#17 naming to docker.io/library/thinkit-technical-challenge-etl:latest
+#17 naming to docker.io/library/thinkit-technical-challenge-etl:latest done
+#17 unpacking to docker.io/library/thinkit-technical-challenge-etl:latest 0.1s done
+#17 DONE 0.4s
+
+#18 resolving provenance for metadata file
+#18 DONE 0.0s
+[+] up 3/3
+ ✔ Image thinkit-technical-challenge-etl Built                                                                                                                        3.7s
+ ✔ Container orders_db                   Running                                                                                                                      0.0s
+ ✔ Container orders_etl                  Recreated                                                                                                                    0.2s
+Attaching to orders_etl
+Container orders_db Waiting 
+Container orders_db Healthy 
+orders_etl  | 20:48:44 [INFO] Lendo CSV: /app/data/orders.csv
+orders_etl  | Traceback (most recent call last):
+orders_etl  |   File "<frozen runpy>", line 198, in _run_module_as_main                                                                                                   
+orders_etl  |   File "<frozen runpy>", line 88, in _run_code                                                                                                              
+orders_etl  |   File "/app/etl/load_orders.py", line 143, in <module>                                                                                                     
+orders_etl  |     run(csv_file)                                                                                                                                           
+orders_etl  |   File "/app/etl/load_orders.py", line 77, in run
+orders_etl  |     raw_rows = _read_csv(csv_path)                                                                                                                          
+orders_etl  |                ^^^^^^^^^^^^^^^^^^^                                                                                                                          
+orders_etl  |   File "/app/etl/load_orders.py", line 41, in _read_csv                                                                                                     
+orders_etl  |     df = pd.read_csv(csv_path, dtype=str, keep_default_na=False)                                                                                            
+orders_etl  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+orders_etl  |   File "/opt/venv/lib/python3.12/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv                                                        
+orders_etl  |     return _read(filepath_or_buffer, kwds)                                                                                                                  
+orders_etl  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                                                                  
+orders_etl  |   File "/opt/venv/lib/python3.12/site-packages/pandas/io/parsers/readers.py", line 620, in _read                                                            
+orders_etl  |     parser = TextFileReader(filepath_or_buffer, **kwds)
+orders_etl  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                                                     
+orders_etl  |   File "/opt/venv/lib/python3.12/site-packages/pandas/io/parsers/readers.py", line 1620, in __init__                                                        
+orders_etl  |     self._engine = self._make_engine(f, self.engine)                                                                                                        
+orders_etl  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+orders_etl  |   File "/opt/venv/lib/python3.12/site-packages/pandas/io/parsers/readers.py", line 1880, in _make_engine                                                    
+orders_etl  |     self.handles = get_handle(                                                                                                                              
+orders_etl  |                    ^^^^^^^^^^^                                                                                                                              
+orders_etl  |   File "/opt/venv/lib/python3.12/site-packages/pandas/io/common.py", line 873, in get_handle
+orders_etl  |     handle = open(                                                                                                                                          
+orders_etl  |              ^^^^^                                                                                                                                          
+orders_etl  | IsADirectoryError: [Errno 21] Is a directory: '/app/data/orders.csv'                                                                                        
+orders_etl exited with code 1
+
+
+v View in Docker Desktop   o View Config   w Enable Watch   d Detach

@@ -1,10 +1,47 @@
 from decimal import Decimal
 
-from sqlalchemy import text
+from sqlalchemy import Numeric, String, bindparam, text
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Customer, Order, OrderDetail, OrderItem
 from app.domain.value_objects import OrderFilters, OrderStatus, Pagination, PaginatedResult
+
+_LIST_ORDERS_SQL = text("""
+    WITH order_totals AS (
+        SELECT
+            o.order_id,
+            o.customer_id,
+            c.customer_name,
+            o.status,
+            o.created_at,
+            o.updated_at,
+            COALESCE(SUM(oi.total_price), 0) AS total_amount
+        FROM orders o
+        JOIN customers c ON c.customer_id = o.customer_id
+        LEFT JOIN order_items oi ON oi.order_id = o.order_id
+        WHERE
+            (:status IS NULL OR o.status = :status)
+            AND (:date_from IS NULL OR o.created_at >= :date_from)
+            AND (:date_to IS NULL OR o.created_at <= :date_to)
+            AND (:customer_name_pattern IS NULL OR c.customer_name ILIKE :customer_name_pattern)
+        GROUP BY o.order_id, o.customer_id, c.customer_name, o.status, o.created_at, o.updated_at
+        HAVING
+            (:min_value IS NULL OR COALESCE(SUM(oi.total_price), 0) >= :min_value)
+            AND (:max_value IS NULL OR COALESCE(SUM(oi.total_price), 0) <= :max_value)
+    )
+    SELECT *, COUNT(*) OVER() AS total_count
+    FROM order_totals
+    ORDER BY created_at DESC
+    LIMIT :limit OFFSET :offset
+""").bindparams(
+    bindparam("status", type_=String),
+    bindparam("date_from", type_=TIMESTAMP(timezone=True)),
+    bindparam("date_to", type_=TIMESTAMP(timezone=True)),
+    bindparam("customer_name_pattern", type_=String),
+    bindparam("min_value", type_=Numeric),
+    bindparam("max_value", type_=Numeric),
+)
 
 
 class SQLAlchemyOrderRepository:
@@ -27,35 +64,7 @@ class SQLAlchemyOrderRepository:
             "offset": pagination.offset,
         }
 
-        # Window function retorna o total junto com cada linha — evita segunda query
-        rows = (await self._session.execute(text("""
-            WITH order_totals AS (
-                SELECT
-                    o.order_id,
-                    o.customer_id,
-                    c.customer_name,
-                    o.status,
-                    o.created_at,
-                    o.updated_at,
-                    COALESCE(SUM(oi.total_price), 0) AS total_amount
-                FROM orders o
-                JOIN customers c ON c.customer_id = o.customer_id
-                LEFT JOIN order_items oi ON oi.order_id = o.order_id
-                WHERE
-                    (:status IS NULL OR o.status = :status)
-                    AND (:date_from IS NULL OR o.created_at >= :date_from)
-                    AND (:date_to IS NULL OR o.created_at <= :date_to)
-                    AND (:customer_name_pattern IS NULL OR c.customer_name ILIKE :customer_name_pattern)
-                GROUP BY o.order_id, o.customer_id, c.customer_name, o.status, o.created_at, o.updated_at
-                HAVING
-                    (:min_value IS NULL OR COALESCE(SUM(oi.total_price), 0) >= :min_value)
-                    AND (:max_value IS NULL OR COALESCE(SUM(oi.total_price), 0) <= :max_value)
-            )
-            SELECT *, COUNT(*) OVER() AS total_count
-            FROM order_totals
-            ORDER BY created_at DESC
-            LIMIT :limit OFFSET :offset
-        """), params)).mappings().all()
+        rows = (await self._session.execute(_LIST_ORDERS_SQL, params)).mappings().all()
 
         if not rows:
             return PaginatedResult(items=[], total=0, page=pagination.page, page_size=pagination.page_size)

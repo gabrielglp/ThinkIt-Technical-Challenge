@@ -32,7 +32,7 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 COPY --chown=appuser:appgroup . .
 
-RUN mkdir -p /app/data && chown appuser:appgroup /app/data
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app
 
 USER appuser
 

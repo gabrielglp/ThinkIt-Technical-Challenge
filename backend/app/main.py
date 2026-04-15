@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.presentation.routers import orders, metrics
+
+log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Orders Management API",
@@ -22,6 +27,12 @@ app.add_middleware(
 
 app.include_router(orders.router, prefix="/orders", tags=["orders"])
 app.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    log.exception("Unhandled error on %s %s", request.method, request.url)
+    return JSONResponse(status_code=500, content={"detail": "Erro interno do servidor."})
 
 
 @app.get("/health", tags=["health"])
