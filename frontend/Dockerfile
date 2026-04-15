@@ -1,27 +1,23 @@
-# ─── Stage 1: deps ────────────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM oven/bun:1 AS deps
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
-COPY package.json package-lock.json* ./
-RUN npm ci --frozen-lockfile
-
-# ─── Stage 2: builder ─────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run build
+RUN bun run build
 
-# ─── Stage 3: runtime ─────────────────────────────────────────
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
