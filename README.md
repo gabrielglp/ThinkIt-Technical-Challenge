@@ -1,211 +1,211 @@
 # Orders Dashboard
 
-Fullstack application for e-commerce order management. Built as a technical challenge with FastAPI, Next.js 16, PostgreSQL and Docker Compose.
+Aplicação fullstack para gestão de pedidos de e-commerce. Desenvolvida como desafio técnico utilizando FastAPI, Next.js 16, PostgreSQL e Docker Compose.
 
 ## Stack
 
-| Layer | Technology |
+| Camada | Tecnologia |
 |---|---|
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Alembic |
-| Database | PostgreSQL 16 |
+| Banco de dados | PostgreSQL 16 |
 | Frontend | Next.js 16, React 19, TypeScript, TanStack Query v5 |
 | UI | Shadcn/ui, Tailwind CSS, Recharts |
-| URL State | nuqs v2 |
-| Package Manager | Bun |
-| Infrastructure | Docker Compose, multi-stage builds |
+| Estado de URL | nuqs v2 |
+| Gerenciador de pacotes | Bun |
+| Infraestrutura | Docker Compose, multi-stage builds |
 
-## Getting started
+## Como executar
 
-### Requirements
+### Requisitos
 
-- Docker and Docker Compose
+- Docker e Docker Compose
 
-### Quick start
+### Início rápido
 
 ```bash
-# 1. Copy environment file
+# 1. Copie o arquivo de ambiente
 cp .env.example .env
 
-# 2. Start all services (PostgreSQL + API + Frontend + ETL seed)
+# 2. Suba todos os serviços (PostgreSQL + API + Frontend + ETL seed)
 docker compose up --build
 ```
 
-The application will be available at the URLs below as soon as the containers are healthy.
+A aplicação estará disponível nas URLs abaixo assim que os containers estiverem saudáveis.
 
-### URLs
+### URLs locais
 
-| Service | URL |
+| Serviço | URL |
 |---|---|
 | Frontend | http://localhost:3000 |
 | API | http://localhost:8000 |
 | Swagger | http://localhost:8000/docs |
 | Health check | http://localhost:8000/health |
 
-## Live demo
+## Demo em produção
 
-The application is deployed and accessible at:
+A aplicação está hospedada e acessível em:
 
-| Service | URL |
+| Serviço | URL |
 |---|---|
 | Frontend | https://avant-glp.lat/dashboard |
 | API / Swagger | https://zaker.lat/docs |
 
-### Hosting
+### Hospedagem
 
-The domain and infrastructure are managed through **[Atlas Hosting](https://atlashosting.com.br)** — a hosting platform I built myself with Next.js, featuring:
+O domínio e a infraestrutura são gerenciados pela **[Atlas Hosting](https://atlashosting.com.br)** — uma plataforma de hospedagem que eu mesmo desenvolvi com Next.js. O domínio foi comprado diretamente pela plataforma, que integra a **API da Namecheap** para registro de domínios e gerenciamento de DNS. Entre as funcionalidades:
 
-- Domain registration integrated with the **Namecheap API**
-- DNS management via **deSEC** (free DNS provider with API)
-- Automated **SSL certificate** provisioning
-- Hosting plans with cPanel integration via **Plesk API**
-- One-click **WordPress** install through the WHMCS/Plesk XML API
-- Billing, payments and affiliate system
+- Registro de domínios integrado com a **API da Namecheap**
+- Gerenciamento de DNS via **deSEC**
+- Provisionamento automático de **certificados SSL**
+- Planos de hospedagem com integração ao cPanel via **API do Plesk**
+- Instalação de **WordPress** com um clique via API XML do WHMCS/Plesk
+- Sistema de cobrança, pagamentos e programa de afiliados
 
-The infrastructure runs on a VPS with **Docker Swarm + Traefik** for routing and automatic HTTPS.
+A infraestrutura roda em um VPS com **Docker Swarm + Traefik** para roteamento e HTTPS automático.
 
-### Running tests
+### Executando os testes
 
 ```bash
 docker compose exec api pytest tests/ -v
 ```
 
-## API Endpoints
+## Endpoints da API
 
-| Method | Path | Description |
+| Método | Caminho | Descrição |
 |---|---|---|
-| `GET` | `/orders` | Paginated list with filters |
-| `GET` | `/orders/{order_id}` | Order detail with items |
-| `GET` | `/metrics` | Average ticket, revenue, top products, status breakdown |
+| `GET` | `/orders` | Lista paginada com filtros |
+| `GET` | `/orders/{order_id}` | Detalhes do pedido com itens |
+| `GET` | `/metrics` | Ticket médio, receita, top produtos, distribuição por status |
 
-### Filters — `GET /orders`
+### Filtros — `GET /orders`
 
-| Parameter | Type | Description |
+| Parâmetro | Tipo | Descrição |
 |---|---|---|
 | `status` | enum | `processing`, `shipped`, `delivered`, `cancelled` |
-| `customer_name` | string | Case-insensitive partial match |
-| `date_from` | datetime | Orders created from this date |
-| `date_to` | datetime | Orders created up to this date |
-| `min_value` | number | Minimum order total |
-| `max_value` | number | Maximum order total |
-| `page` | int | Page number (default: 1) |
-| `page_size` | int | Items per page (default: 20, max: 100) |
+| `customer_name` | string | Busca parcial sem distinção de maiúsculas |
+| `date_from` | datetime | Pedidos criados a partir desta data |
+| `date_to` | datetime | Pedidos criados até esta data |
+| `min_value` | number | Valor mínimo do pedido |
+| `max_value` | number | Valor máximo do pedido |
+| `page` | int | Número da página (padrão: 1) |
+| `page_size` | int | Itens por página (padrão: 20, máx: 100) |
 
-## Architecture
+## Arquitetura
 
 ### Backend — Clean Architecture
 
 ```
 backend/
 ├── app/
-│   ├── domain/          # Entities, value objects, repository interfaces (Protocols)
-│   ├── application/     # Use cases — orchestrate domain and repositories
-│   ├── infrastructure/  # SQLAlchemy models, async repositories, DB engine
-│   └── presentation/    # FastAPI routers, Pydantic schemas, dependency injection
-├── etl/                 # CSV ingestion pipeline (validate → transform → load)
-├── migrations/          # Alembic migrations
+│   ├── domain/          # Entidades, value objects, interfaces de repositório (Protocols)
+│   ├── application/     # Casos de uso — orquestram domínio e repositórios
+│   ├── infrastructure/  # Models SQLAlchemy, repositórios async, engine do banco
+│   └── presentation/    # Routers FastAPI, schemas Pydantic, injeção de dependências
+├── etl/                 # Pipeline de ingestão de CSV (validar → transformar → carregar)
+├── migrations/          # Migrations Alembic
 └── tests/
-    ├── unit/            # Domain and ETL logic (no DB required)
-    └── integration/     # API endpoints via TestClient
+    ├── unit/            # Lógica de domínio e ETL (sem necessidade de banco)
+    └── integration/     # Endpoints da API via TestClient
 ```
 
-Repository interfaces are defined as `Protocol` classes in the domain layer. The infrastructure layer implements them. Use cases depend only on the protocols — never on concrete implementations.
+As interfaces de repositório são definidas como classes `Protocol` na camada de domínio. A camada de infraestrutura as implementa. Os casos de uso dependem apenas dos protocolos — nunca de implementações concretas.
 
 ### Frontend — Next.js App Router
 
 ```
 frontend/src/
 ├── app/
-│   ├── dashboard/       # Dashboard page (metrics, chart, table with filters)
-│   └── dashboard/[id]/  # Order detail page
+│   ├── dashboard/       # Página principal (métricas, gráfico, tabela com filtros)
+│   └── dashboard/[id]/  # Página de detalhes do pedido
 ├── components/
-│   ├── ui/              # Shadcn/ui primitives
-│   └── *.tsx            # Domain-specific components
+│   ├── ui/              # Primitivos do Shadcn/ui
+│   └── *.tsx            # Componentes específicos do domínio
 ├── lib/
-│   ├── api.ts           # Fetch functions for each endpoint
+│   ├── api.ts           # Funções de fetch para cada endpoint
 │   └── utils.ts         # cn(), formatCurrency(), formatDate()
-└── types/               # TypeScript interfaces mirroring API schemas
+└── types/               # Interfaces TypeScript espelhando os schemas da API
 ```
 
-Filter state is synced to the URL via **nuqs**, so filters survive page refreshes and can be shared via link. Data fetching uses **TanStack Query** for caching, deduplication and loading states.
+O estado dos filtros é sincronizado com a URL via **nuqs**, então os filtros sobrevivem a recarregamentos da página e podem ser compartilhados via link. A busca de dados utiliza **TanStack Query** para cache, deduplicação e estados de carregamento.
 
-### ETL pipeline
+### Pipeline ETL
 
-The ETL is idempotent — safe to run multiple times against the same CSV:
+O ETL é idempotente — seguro para executar múltiplas vezes com o mesmo CSV:
 
-1. **Validate** — regex, type coercion, range checks, date ordering
-2. **Transform** — deduplicate customers/products by natural key
-3. **Load** — `ON CONFLICT DO UPDATE` for customers, products and orders; `WHERE NOT EXISTS` for order items
+1. **Validar** — regex, coerção de tipos, verificações de intervalo, ordenação de datas
+2. **Transformar** — deduplicação de clientes/produtos por chave natural
+3. **Carregar** — `ON CONFLICT DO UPDATE` para clientes, produtos e pedidos; `WHERE NOT EXISTS` para itens de pedido
 
-Errors are written to `etl_errors.log` and a summary to `etl_report.json`.
+Erros são gravados em `etl_errors.log` e um resumo em `etl_report.json`.
 
-### Key technical decisions
+### Decisões técnicas
 
-**`Protocol` over `ABC` for repository interfaces** — structural typing avoids inheritance coupling between layers. The infrastructure layer never imports from the domain layer.
+**`Protocol` em vez de `ABC` para interfaces de repositório** — a tipagem estrutural evita acoplamento por herança entre camadas. A camada de infraestrutura nunca importa da camada de domínio.
 
-**`COUNT(*) OVER()`** — window function returns the total count alongside each row, avoiding a separate `COUNT(*)` query for pagination.
+**`COUNT(*) OVER()`** — window function retorna o total junto com cada linha, evitando uma query `COUNT(*)` separada para paginação.
 
-**`lazy="raise"` on all SQLAlchemy relationships** — prevents accidental N+1 queries. All joins are explicit in the repository SQL.
+**`lazy="raise"` em todos os relacionamentos SQLAlchemy** — previne queries N+1 acidentais. Todos os joins são explícitos no SQL dos repositórios.
 
-**`bindparams` with explicit types** — asyncpg cannot infer PostgreSQL types for `None` parameters. Using `bindparam("status", type_=String)` tells SQLAlchemy the type so asyncpg can emit the correct type annotation.
+**`bindparams` com tipos explícitos** — o asyncpg não consegue inferir tipos PostgreSQL para parâmetros `None`. Usar `bindparam("status", type_=String)` informa ao SQLAlchemy o tipo para que o asyncpg emita a anotação correta.
 
-**Bun as package manager** — faster installs, native lockfile, compatible with Next.js 16.
+**Bun como gerenciador de pacotes** — instalações mais rápidas, lockfile nativo, compatível com Next.js 16.
 
-**Multi-stage Docker builds** — builder stages include compilers and dev dependencies; the runtime image copies only the compiled output, resulting in a smaller final image.
+**Multi-stage Docker builds** — os estágios de builder incluem compiladores e dependências de desenvolvimento; a imagem de runtime copia apenas o output compilado, resultando em uma imagem final menor.
 
-## ⭐ Extra features — beyond the spec
+## ⭐ Funcionalidades extras — além do escopo
 
-The challenge required three read endpoints, an ETL script and a dashboard. Everything below was built on top of that, without being asked.
+O desafio exigia três endpoints de leitura, um script ETL e um dashboard. Tudo abaixo foi construído além disso, sem ter sido solicitado.
 
-### Authentication system
+### Sistema de autenticação
 
-A full JWT-based auth flow was implemented end-to-end:
+Um fluxo completo de autenticação JWT foi implementado de ponta a ponta:
 
-| Feature | Details |
+| Funcionalidade | Detalhes |
 |---|---|
-| Register | `POST /auth/register` — creates account, returns JWT |
-| Login | `POST /auth/login` — validates credentials, returns JWT |
-| Forgot password | `POST /auth/forgot-password` — sends reset link via SMTP email |
-| Reset password | `POST /auth/reset-password/{token}` — validates signed JWT token (30 min TTL, type claim `"reset"`), updates password |
-| Protected routes | `POST /orders`, `PUT /orders/{id}`, `POST /orders/import` require Bearer token |
+| Cadastro | `POST /auth/register` — cria conta, retorna JWT |
+| Login | `POST /auth/login` — valida credenciais, retorna JWT |
+| Esqueci a senha | `POST /auth/forgot-password` — envia link de redefinição por e-mail via SMTP |
+| Redefinir senha | `POST /auth/reset-password/{token}` — valida token JWT assinado (TTL de 30 min, claim `"reset"`), atualiza a senha |
+| Rotas protegidas | `POST /orders`, `PUT /orders/{id}`, `POST /orders/import` exigem Bearer token |
 
-### Write endpoints
+### Endpoints de escrita
 
-| Method | Path | Description |
+| Método | Caminho | Descrição |
 |---|---|---|
-| `POST` | `/orders` | Create a new order with full customer + item data |
-| `PUT` | `/orders/{order_id}` | Edit an existing order (items replaced entirely) |
-| `POST` | `/orders/import` | Upload a CSV, process it through the ETL and return a report |
+| `POST` | `/orders` | Cria um novo pedido com dados completos de cliente e itens |
+| `PUT` | `/orders/{order_id}` | Edita um pedido existente (itens substituídos integralmente) |
+| `POST` | `/orders/import` | Faz upload de um CSV, processa pelo ETL e retorna relatório |
 
-The frontend exposes a full order create/edit form with CEP auto-fill (ViaCEP), currency mask, category search dropdown and status selector.
+O frontend disponibiliza um formulário completo de criação/edição de pedidos com preenchimento automático de CEP (ViaCEP), máscara de moeda, dropdown de busca de categoria e seletor de status.
 
-### CSV import via UI
+### Importação de CSV pela interface
 
-Authenticated users can upload a `.csv` file directly from the dashboard. The file is uploaded to a **Storj S3-compatible bucket** before ETL processing, keeping a permanent record of every import. The response includes row counts (valid, invalid, errors) and the S3 key.
+Usuários autenticados podem fazer upload de um arquivo `.csv` diretamente pelo dashboard. O arquivo é enviado para um **bucket S3-compatível da Storj** antes do processamento pelo ETL, mantendo um registro permanente de cada importação. A resposta inclui contagens de linhas (válidas, inválidas, erros) e a chave S3.
 
-### Security hardening
+### Segurança
 
-- **Rate limiting** — `slowapi` limits login to 5 req/min, register to 10 req/min and forgot-password to 3 req/min per IP (HTTP 429)
-- **Timing-safe login** — bcrypt is always executed even when the e-mail does not exist, preventing user enumeration via response timing
-- **Security headers** — every response includes `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy` and `Permissions-Policy`
-- **Password strength** — minimum 8 characters with at least one digit, enforced on both backend (Pydantic `field_validator`) and frontend (Zod schema)
-- **Zod validation** — all frontend forms validate with Zod before sending any request, with inline field-level error messages
+- **Rate limiting** — `slowapi` limita login a 5 req/min, cadastro a 10 req/min e esqueci-a-senha a 3 req/min por IP (HTTP 429)
+- **Login com tempo constante** — o bcrypt é sempre executado mesmo quando o e-mail não existe, prevenindo enumeração de usuários via tempo de resposta
+- **Headers de segurança** — toda resposta inclui `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy` e `Permissions-Policy`
+- **Força de senha** — mínimo de 8 caracteres com pelo menos um dígito, validado tanto no backend (Pydantic `field_validator`) quanto no frontend (schema Zod)
+- **Validação com Zod** — todos os formulários do frontend validam com Zod antes de enviar qualquer requisição, com mensagens de erro por campo
 
-## What I would do differently
+## O que eu faria diferente
 
-**Role-based access control (RBAC)** — the `users` table and JWT claims are already in place. Adding a `role` field (`admin` / `viewer`) would allow restricting write operations to admins only, while viewers browse read-only. A super-admin role could manage accounts, create new users and assign roles — turning this into a multi-tenant panel.
+**Controle de acesso baseado em papéis (RBAC)** — a tabela `users` e as claims do JWT já estão implementadas. Adicionar um campo `role` (`admin` / `viewer`) permitiria restringir operações de escrita apenas a admins. Um papel de super-admin poderia gerenciar contas e criar novos usuários, transformando o sistema em um painel multi-tenant.
 
-**Per-user data isolation** — currently all authenticated users share the same order list. With a `tenant_id` or `owner_id` column on `orders`, each user (or team) would only see their own data. A super-admin account would retain global visibility.
+**Isolamento de dados por usuário** — atualmente todos os usuários autenticados compartilham a mesma lista de pedidos. Com uma coluna `tenant_id` ou `owner_id` em `orders`, cada usuário (ou equipe) veria apenas seus próprios dados. Uma conta de super-admin manteria visibilidade global.
 
-**Event-driven ETL** — replace the one-shot script with a message queue (RabbitMQ or AWS SQS). New CSV files would be dropped into object storage, triggering an async worker. This enables retries, dead-letter queues and horizontal scaling without blocking the API.
+**ETL orientado a eventos** — substituir o script pontual por uma fila de mensagens (RabbitMQ ou AWS SQS). Novos arquivos CSV seriam depositados no object storage, disparando um worker assíncrono. Isso habilita retries, filas de dead-letter e escalonamento horizontal sem bloquear a API.
 
-**Redis caching for metrics** — the `/metrics` endpoint aggregates the entire `order_items` table on every request. With Redis, results could be cached with a short TTL and invalidated on ETL completion.
+**Cache com Redis para métricas** — o endpoint `/metrics` agrega toda a tabela `order_items` a cada requisição. Com Redis, os resultados poderiam ser cacheados com TTL curto e invalidados ao término do ETL.
 
-**Separate read/write models (CQRS)** — the current repositories serve both reads and writes. A dedicated read model with pre-aggregated views or a read replica would improve query performance at scale.
+**Modelos separados de leitura e escrita (CQRS)** — os repositórios atuais atendem tanto leituras quanto escritas. Um modelo de leitura dedicado com views pré-agregadas ou uma réplica de leitura melhoraria o desempenho das queries em escala.
 
-**Background jobs for reports** — heavy exports (CSV, PDF) should be queued and delivered asynchronously rather than blocking an HTTP request.
+**Jobs em background para relatórios** — exports pesados (CSV, PDF) deveriam ser enfileirados e entregues de forma assíncrona em vez de bloquear uma requisição HTTP.
 
-**Observability** — structured logging (JSON), distributed tracing (OpenTelemetry) and a metrics endpoint (Prometheus) would make production incidents much easier to diagnose.
+**Observabilidade** — logging estruturado (JSON), rastreamento distribuído (OpenTelemetry) e um endpoint de métricas (Prometheus) tornariam incidentes em produção muito mais fáceis de diagnosticar.
 
-**E2E tests with Playwright** — the integration tests cover the API contract but not the browser interaction. Playwright tests would validate filter behavior, pagination, form flows and protected route redirects end-to-end.
+**Testes E2E com Playwright** — os testes de integração cobrem o contrato da API, mas não a interação no navegador. Testes Playwright validariam o comportamento dos filtros, paginação, fluxos de formulário e redirecionamentos de rotas protegidas de ponta a ponta.
 
-**Contract testing** — beyond integration tests, consumer-driven contract tests (Pact) would catch API breaking changes before they reach production, especially useful as the frontend and backend evolve independently.
+**Testes de contrato** — além dos testes de integração, testes de contrato orientados ao consumidor (Pact) detectariam breaking changes na API antes de chegarem à produção, especialmente úteis conforme frontend e backend evoluem de forma independente.
