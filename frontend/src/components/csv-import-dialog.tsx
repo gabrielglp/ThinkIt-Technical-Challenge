@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Upload, FileText, CheckCircle, XCircle } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { importCsv } from "@/lib/api";
@@ -25,6 +26,7 @@ type State = "idle" | "loading" | "success" | "error";
 export function CsvImportDialog({ open, onOpenChange }: Props) {
   const { token } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [state, setState] = useState<State>("idle");
@@ -55,6 +57,8 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
       const result = await importCsv(file, token);
       setReport(result);
       setState("success");
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["metrics"] });
       toast({
         title: "Importação concluída!",
         description: `${result.valid_rows} linha(s) importada(s), ${result.invalid_rows} inválida(s).`,
