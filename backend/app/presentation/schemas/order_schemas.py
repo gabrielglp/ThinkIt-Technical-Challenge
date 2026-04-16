@@ -63,24 +63,23 @@ class PaginatedOrdersSchema(BaseModel):
     has_previous: bool
 
 
-# ── Write schemas ──────────────────────────────────────────────────────────────
 
 class OrderItemWriteSchema(BaseModel):
-    product_id: str = Field(..., pattern=r"^PROD-\d+$")
-    product_name: str = Field(..., min_length=1, max_length=255)
-    category: str = Field(..., min_length=1, max_length=100)
-    quantity: int = Field(..., ge=1)
-    unit_price: Decimal = Field(..., ge=0)
-    discount_pct: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    product_id: str = Field(..., pattern=r"^PROD-\d+$", examples=["PROD-00123"])
+    product_name: str = Field(..., min_length=1, max_length=255, examples=["Tênis Esportivo"])
+    category: str = Field(..., min_length=1, max_length=100, examples=["Esportes"])
+    quantity: int = Field(..., ge=1, examples=[2])
+    unit_price: Decimal = Field(..., ge=0, examples=[199.90])
+    discount_pct: Decimal = Field(default=Decimal("0"), ge=0, le=100, examples=[10.0])
 
 
 class OrderWriteSchema(BaseModel):
-    customer_id: str = Field(..., pattern=r"^CLI-\d+$")
-    customer_name: str = Field(..., min_length=2, max_length=255)
-    customer_email: EmailStr
-    city: str | None = None
-    state: str | None = Field(default=None, max_length=2)
-    status: OrderStatus
-    created_at: datetime
-    updated_at: datetime
+    customer_id: str = Field(..., pattern=r"^CLI-\d+$", examples=["CLI-00456"])
+    customer_name: str = Field(..., min_length=2, max_length=255, examples=["Maria Souza"])
+    customer_email: EmailStr = Field(..., examples=["maria@email.com"])
+    city: str | None = Field(default=None, examples=["São Paulo"])
+    state: str | None = Field(default=None, max_length=2, examples=["SP"])
+    status: OrderStatus = Field(..., examples=["processing"])
+    created_at: datetime = Field(..., examples=["2024-06-01T10:00:00Z"])
+    updated_at: datetime = Field(..., examples=["2024-06-01T10:00:00Z"])
     items: list[OrderItemWriteSchema] = Field(..., min_length=1)

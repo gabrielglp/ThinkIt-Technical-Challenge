@@ -4,7 +4,6 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# URL vinda do docker-compose via env var
 db_url = os.getenv("DATABASE_URL_SYNC")
 
 config = context.config
@@ -15,7 +14,6 @@ if db_url:
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Importa todos os models para o autogenerate funcionar
 from app.infrastructure.models import Base  # noqa: E402
 
 target_metadata = Base.metadata

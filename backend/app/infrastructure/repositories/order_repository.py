@@ -103,7 +103,6 @@ class SQLAlchemyOrderRepository:
         return await self._fetch_detail(order_row)
 
     async def create_order(self, payload: OrderWritePayload) -> OrderDetail:
-        # Upsert customer
         await self._session.execute(text("""
             INSERT INTO customers (customer_id, customer_name, customer_email, city, state)
             VALUES (:customer_id, :customer_name, :customer_email, :city, :state)
@@ -121,7 +120,6 @@ class SQLAlchemyOrderRepository:
             "state": payload.state,
         })
 
-        # Upsert products
         for item in payload.items:
             await self._session.execute(text("""
                 INSERT INTO products (product_id, product_name, category)
@@ -132,7 +130,6 @@ class SQLAlchemyOrderRepository:
                     updated_at   = NOW()
             """), {"product_id": item.product_id, "product_name": item.product_name, "category": item.category})
 
-        # Generate order_id
         max_row = (await self._session.execute(text(
             "SELECT order_id FROM orders ORDER BY order_id DESC LIMIT 1"
         ))).scalar()
@@ -179,7 +176,6 @@ class SQLAlchemyOrderRepository:
         if not exists:
             return None
 
-        # Upsert customer
         await self._session.execute(text("""
             INSERT INTO customers (customer_id, customer_name, customer_email, city, state)
             VALUES (:customer_id, :customer_name, :customer_email, :city, :state)
@@ -210,7 +206,6 @@ class SQLAlchemyOrderRepository:
             "updated_at": payload.updated_at,
         })
 
-        # Replace items
         await self._session.execute(
             text("DELETE FROM order_items WHERE order_id = :order_id"),
             {"order_id": order_id},

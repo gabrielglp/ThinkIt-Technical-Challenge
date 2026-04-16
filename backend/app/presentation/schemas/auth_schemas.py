@@ -2,9 +2,9 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class RegisterRequest(BaseModel):
-    name: str = Field(..., min_length=2, max_length=255)
-    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-    password: str = Field(..., min_length=8)
+    name: str = Field(..., min_length=2, max_length=255, examples=["João Silva"])
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", examples=["joao@email.com"])
+    password: str = Field(..., min_length=8, examples=["Senha123"])
 
     @field_validator("password")
     @classmethod
@@ -15,8 +15,8 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-    password: str = Field(..., min_length=1)
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", examples=["joao@email.com"])
+    password: str = Field(..., min_length=1, examples=["Senha123"])
 
 
 class UserResponse(BaseModel):
@@ -32,12 +32,12 @@ class AuthResponse(BaseModel):
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", examples=["joao@email.com"])
 
 
 class ResetPasswordRequest(BaseModel):
-    password: str = Field(..., min_length=8)
-    confirm_password: str = Field(..., min_length=8)
+    password: str = Field(..., min_length=8, examples=["NovaSenha123"])
+    confirm_password: str = Field(..., min_length=8, examples=["NovaSenha123"])
 
     @field_validator("password")
     @classmethod

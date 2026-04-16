@@ -20,14 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// ─── Currency helpers ───────────────────────────────────────────────────────
-
 function formatCurrency(cents: number): string {
   return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function parseCurrencyInput(raw: string): number {
-  // Remove everything except digits
   const digits = raw.replace(/\D/g, "");
   return parseInt(digits || "0", 10);
 }
@@ -38,7 +35,7 @@ function CurrencyInput({
   id,
   placeholder = "0,00",
 }: {
-  value: number; // in cents
+  value: number;
   onChange: (cents: number) => void;
   id?: string;
   placeholder?: string;
@@ -58,8 +55,6 @@ function CurrencyInput({
     />
   );
 }
-
-// ─── Category search dropdown ─────────────────────────────────────────────
 
 const CATEGORIES = [
   "Eletrônicos",
@@ -116,8 +111,6 @@ function CategoryCombobox({ value, onChange }: { value: string; onChange: (v: st
     </div>
   );
 }
-
-// ─── Types ────────────────────────────────────────────────────────────────
 
 interface ItemForm {
   product_id: string;
@@ -187,8 +180,6 @@ function toPayload(form: FormState): OrderWritePayload {
     })),
   };
 }
-
-// ─── Main component ───────────────────────────────────────────────────────
 
 interface Props {
   order?: OrderDetail;
