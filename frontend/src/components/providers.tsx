@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState } from "react";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ToastContextProvider } from "@/hooks/use-toast";
 import { ToastProvider, ToastViewport } from "@/components/ui/toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -26,7 +27,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <NuqsAdapter>
           <AuthProvider>
             <ToastProvider>
-              {children}
+              <ToastContextProvider>
+                {children}
+              </ToastContextProvider>
               <ToastViewport />
             </ToastProvider>
           </AuthProvider>

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Upload, FileText, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { importCsv } from "@/lib/api";
 import type { ImportCsvReport } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ type State = "idle" | "loading" | "success" | "error";
 
 export function CsvImportDialog({ open, onOpenChange }: Props) {
   const { token } = useAuth();
+  const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [state, setState] = useState<State>("idle");
@@ -53,9 +55,15 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
       const result = await importCsv(file, token);
       setReport(result);
       setState("success");
+      toast({
+        title: "Importação concluída!",
+        description: `${result.valid_rows} linha(s) importada(s), ${result.invalid_rows} inválida(s).`,
+      });
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Erro ao importar.");
+      const msg = err instanceof Error ? err.message : "Erro ao importar.";
+      setErrorMsg(msg);
       setState("error");
+      toast({ title: "Erro ao importar CSV.", description: msg, variant: "destructive" });
     }
   }
 

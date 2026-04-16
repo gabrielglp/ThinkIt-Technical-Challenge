@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { createOrder, updateOrder } from "@/lib/api";
 import type { OrderDetail, OrderItemWritePayload, OrderStatus, OrderWritePayload } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -194,6 +195,7 @@ interface Props {
 export function OrderForm({ order }: Props) {
   const { token } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const now = new Date().toISOString().slice(0, 16);
   const [form, setForm] = useState<FormState>(
@@ -215,7 +217,6 @@ export function OrderForm({ order }: Props) {
 
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
-  const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -265,19 +266,24 @@ export function OrderForm({ order }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
-    setSubmitError("");
     setLoading(true);
     try {
       const payload = toPayload(form);
       if (order) {
         await updateOrder(order.order_id, payload, token);
+        toast({ title: "Pedido atualizado com sucesso!" });
       } else {
         await createOrder(payload, token);
+        toast({ title: "Pedido criado com sucesso!" });
       }
       router.push("/orders");
       router.refresh();
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Erro ao salvar pedido.");
+    } catch {
+      toast({
+        title: order ? "Erro ao atualizar pedido." : "Erro ao criar pedido.",
+        description: "Verifique os dados e tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -487,10 +493,6 @@ export function OrderForm({ order }: Props) {
           </div>
         ))}
       </section>
-
-      {submitError && (
-        <p className="text-sm text-destructive">{submitError}</p>
-      )}
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={() => router.back()}>

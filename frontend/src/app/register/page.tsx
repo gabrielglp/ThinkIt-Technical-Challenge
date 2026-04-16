@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { registerUser } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,31 +14,31 @@ import { Label } from "@/components/ui/label";
 export default function RegisterPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     if (password.length < 6) {
-      setError("A senha deve ter ao menos 6 caracteres.");
+      toast({ title: "A senha deve ter ao menos 6 caracteres.", variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
       const data = await registerUser(name, email, password);
       login(data);
+      toast({ title: "Conta criada com sucesso!", description: `Bem-vindo, ${name}!` });
       router.push("/orders");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("409") || msg.toLowerCase().includes("already")) {
-        setError("Este e-mail já está cadastrado.");
+        toast({ title: "E-mail já cadastrado.", description: "Tente fazer login ou use outro e-mail.", variant: "destructive" });
       } else {
-        setError("Erro ao criar conta. Tente novamente.");
+        toast({ title: "Erro ao criar conta.", description: "Tente novamente.", variant: "destructive" });
       }
     } finally {
       setLoading(false);
@@ -46,7 +47,6 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-56px)]">
-      {/* Left decorative panel */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-primary p-12 text-primary-foreground">
         <div className="flex items-center gap-2 text-lg font-semibold">
           <span>⬡</span>
@@ -61,7 +61,6 @@ export default function RegisterPage() {
         <p className="text-xs opacity-50">© 2024 Função extra</p>
       </div>
 
-      {/* Right form panel */}
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-2 text-center">
@@ -120,10 +119,6 @@ export default function RegisterPage() {
                 </button>
               </div>
             </div>
-
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Criando conta..." : "Criar conta"}

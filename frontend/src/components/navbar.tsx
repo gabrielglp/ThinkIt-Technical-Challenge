@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Moon, Sun, LogIn, UserPlus, LogOut, User, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,10 +21,12 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [importOpen, setImportOpen] = useState(false);
 
   function handleLogout() {
     logout();
+    toast({ title: "Sessão encerrada.", description: "Você saiu da sua conta." });
     router.push("/");
   }
 
