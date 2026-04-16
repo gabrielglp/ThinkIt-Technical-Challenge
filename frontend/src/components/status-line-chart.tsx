@@ -109,7 +109,7 @@ export function StatusLineChart({ data }: Props) {
             allowDecimals={false}
             width={36}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted))" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--foreground) / 0.06)", rx: 6 }} />
           <Bar dataKey="value" radius={[4, 4, 0, 0]}>
             {chartData.map((entry) => (
               <Cell key={entry.key} fill={entry.color} />
