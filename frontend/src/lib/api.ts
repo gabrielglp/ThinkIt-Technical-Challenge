@@ -82,6 +82,10 @@ export function registerUser(name: string, email: string, password: string): Pro
   return post<AuthToken>("/auth/register", { name, email, password });
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await post<{ message: string }>("/auth/forgot-password", { email });
+}
+
 export function loginUser(email: string, password: string): Promise<AuthToken> {
   return post<AuthToken>("/auth/login", { email, password });
 }
