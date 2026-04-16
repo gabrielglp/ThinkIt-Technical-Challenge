@@ -168,17 +168,33 @@ Erros são gravados em `etl_errors.log` e um resumo em `etl_report.json`.
 
 ### Decisões técnicas
 
-**`Protocol` em vez de `ABC` para interfaces de repositório** — a tipagem estrutural evita acoplamento por herança entre camadas. A camada de infraestrutura nunca importa da camada de domínio.
+**`Protocol` em vez de `ABC` para interfaces de repositório** — a tipagem estrutural evita acoplamento por herança entre camadas. A camada de infraestrutura nunca importa da camada de domínio. Trocar o repositório PostgreSQL por um in-memory para testes não exige nenhuma alteração nas camadas superiores.
 
-**`COUNT(*) OVER()`** — window function retorna o total junto com cada linha, evitando uma query `COUNT(*)` separada para paginação.
+**`COUNT(*) OVER()`** — window function retorna o total junto com cada linha, evitando uma segunda query `COUNT(*)` separada para paginação. Uma query em vez de duas por listagem.
 
-**`lazy="raise"` em todos os relacionamentos SQLAlchemy** — previne queries N+1 acidentais. Todos os joins são explícitos no SQL dos repositórios.
+**`lazy="raise"` em todos os relacionamentos SQLAlchemy** — qualquer acesso a relacionamento não carregado explicitamente levanta uma exceção em vez de disparar uma query silenciosa. Previne queries N+1 acidentais; todos os joins são declarados explicitamente nos repositórios.
 
-**`bindparams` com tipos explícitos** — o asyncpg não consegue inferir tipos PostgreSQL para parâmetros `None`. Usar `bindparam("status", type_=String)` informa ao SQLAlchemy o tipo para que o asyncpg emita a anotação correta.
+**`bindparams` com tipos explícitos** — o asyncpg não consegue inferir tipos PostgreSQL para parâmetros `None`. Usar `bindparam("status", type_=String)` informa ao SQLAlchemy o tipo correto para que o asyncpg emita a anotação de tipo no protocolo binário.
 
-**Bun como gerenciador de pacotes** — instalações mais rápidas, lockfile nativo, compatível com Next.js 16.
+**Bun como gerenciador de pacotes** — em vez do npm ou yarn, o Bun instala dependências em média 10–25x mais rápido por usar um cache binário nativo e paralelizar downloads. O `bun.lock` é mais compacto que o `package-lock.json` e o build do Next.js roda via `bun run build` sem nenhuma configuração extra.
 
-**Multi-stage Docker builds** — os estágios de builder incluem compiladores e dependências de desenvolvimento; a imagem de runtime copia apenas o output compilado, resultando em uma imagem final menor.
+**nuqs para estado de filtros na URL** — em vez de `useState` local, os filtros de busca, status, data e valor são serializados como query params (`?status=shipped&page=2`). Isso permite compartilhar links com filtros aplicados, preservar o estado ao voltar no histórico do navegador e fazer deep link direto para uma busca específica.
+
+**Shadcn/ui em vez de uma biblioteca de componentes fechada** — o Shadcn não é instalado como dependência; os componentes são copiados para `src/components/ui/` e pertencem ao projeto. Isso permite customizar tokens de design (cores, raios, espaçamentos) via variáveis CSS no `globals.css` sem sobrescrever estilos de terceiros ou depender de versões externas.
+
+**Recharts para os gráficos** — biblioteca React-native baseada em SVG com API declarativa. O gráfico de barras (`BarChart`) e o donut (`PieChart`) em `status-chart.tsx` e `status-line-chart.tsx` são compostos com primitivos (` <Bar>`, `<Cell>`, `<Tooltip>`) sem configuração de canvas ou `useEffect`, mantendo o código legível e fácil de testar.
+
+**bcrypt com tempo constante no login** — ao buscar um usuário por e-mail e não encontrá-lo, o código ainda executa `bcrypt.verify` com um hash fictício antes de retornar o erro. Isso garante que o tempo de resposta seja o mesmo independentemente de o e-mail existir ou não, prevenindo enumeração de usuários via timing attack.
+
+**Zod para validação de formulários no frontend** — todos os formulários (login, cadastro, criação/edição de pedido, redefinição de senha) definem um schema Zod com mensagens de erro por campo. O `react-hook-form` integra via `zodResolver`, garantindo que nenhuma requisição seja enviada com dados inválidos e centralizando as regras de validação em um único lugar — as mesmas regras que geram os tipos TypeScript via `z.infer`.
+
+**nuqs + TanStack Query em conjunto** — o nuqs serializa os filtros ativos como query params na URL (estado externo), enquanto o TanStack Query usa esses valores como `queryKey` para cache e deduplicação (estado de servidor). A combinação elimina `useEffect` para sincronizar filtros, garante que trocar um filtro invalide o cache automaticamente e mantém o estado de paginação e busca compartilhável via link.
+
+**SQLAlchemy 2.0 async com asyncpg** — todos os repositórios usam `AsyncSession` e `async/await` nativos, sem misturar I/O síncrono na thread do event loop do uvicorn. O driver `asyncpg` usa o protocolo binário do PostgreSQL, mais eficiente que o protocolo texto do psycopg2. A API `select()` do SQLAlchemy 2.0 (estilo Core) é usada nos repositórios em vez do estilo ORM legado, dando controle explícito sobre os joins gerados.
+
+**Alembic para migrations** — em vez de `Base.metadata.create_all()` que recria o schema do zero, o Alembic mantém um histórico versionado de alterações (`migrations/versions/`). Cada migration é reversível (`upgrade`/`downgrade`), o que permite rollback seguro em produção. O comando `alembic upgrade head` roda automaticamente no startup do container da API, garantindo que o schema esteja sempre atualizado antes de aceitar requisições.
+
+**Multi-stage Docker builds** — o estágio `builder` instala compiladores (`gcc`, `libpq-dev`) e gera os artefatos; o estágio `runtime` copia apenas o venv compilado e o código, sem ferramentas de build. A imagem final é significativamente menor e não expõe dependências de compilação.
 
 ## ⭐ Funcionalidades extras — além do escopo
 
