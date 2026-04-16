@@ -53,12 +53,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - ./orders.csv:/app/data/orders.csv:ro
     networks:
       - orders_network
 
-  # ─── ETL (one-shot, roda separado) ───────────────────────────
+  # ─── ETL (roda uma vez na inicialização) ─────────────────────
   etl:
     build:
       context: ./backend
@@ -69,14 +75,12 @@ services:
       DATABASE_URL_SYNC: ${DATABASE_URL_SYNC}
     command: ["python", "-m", "etl.load_orders", "/app/data/orders.csv"]
     depends_on:
-      db:
+      api:
         condition: service_healthy
     volumes:
       - ./orders.csv:/app/data/orders.csv:ro
     networks:
       - orders_network
-    profiles:
-      - etl
 
   # ─── Next.js frontend ─────────────────────────────────────────
   frontend:

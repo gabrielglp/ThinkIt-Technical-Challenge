@@ -26,11 +26,8 @@ Fullstack application for e-commerce order management. Built as a technical chal
 # 1. Copy environment file
 cp .env.example .env
 
-# 2. Start all services (PostgreSQL + API + Frontend)
+# 2. Start all services (PostgreSQL + API + Frontend + ETL seed)
 docker compose up --build
-
-# 3. (Optional) Populate the database from the sample CSV
-docker compose --profile etl up etl
 ```
 
 The application will be available at the URLs below as soon as the containers are healthy.
