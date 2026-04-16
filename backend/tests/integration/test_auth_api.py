@@ -111,3 +111,24 @@ class TestLogin:
         token = client.post("/auth/login", json={"email": email, "password": password}).json()["access_token"]
         assert isinstance(token, str)
         assert len(token) > 20
+
+
+class TestForgotPassword:
+    def test_returns_200_for_registered_email(self, client: TestClient):
+        email = _unique_email()
+        client.post("/auth/register", json={"name": "FP User", "email": email, "password": "senha123"})
+        response = client.post("/auth/forgot-password", json={"email": email})
+        assert response.status_code == 200
+
+    def test_returns_200_for_unknown_email(self, client: TestClient):
+        response = client.post("/auth/forgot-password", json={"email": "nobody@example.com"})
+        assert response.status_code == 200
+
+    def test_invalid_email_returns_422(self, client: TestClient):
+        response = client.post("/auth/forgot-password", json={"email": "not-an-email"})
+        assert response.status_code == 422
+
+    def test_response_has_message(self, client: TestClient):
+        email = _unique_email()
+        data = client.post("/auth/forgot-password", json={"email": email}).json()
+        assert "message" in data

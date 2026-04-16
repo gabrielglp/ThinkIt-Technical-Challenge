@@ -8,8 +8,8 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(..., min_length=1)
 
 
 class UserResponse(BaseModel):
@@ -25,7 +25,7 @@ class AuthResponse(BaseModel):
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: str
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 class ResetPasswordRequest(BaseModel):
