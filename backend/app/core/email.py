@@ -10,6 +10,10 @@ log = logging.getLogger(__name__)
 
 
 async def send_mail(to: str, subject: str, html: str) -> None:
+    if not settings.smtp_host or not settings.smtp_port:
+        log.warning("SMTP não configurado — email para %s ignorado (assunto: %s)", to, subject)
+        return
+
     message = MIMEMultipart("alternative")
     message["From"] = settings.smtp_from_email
     message["To"] = to

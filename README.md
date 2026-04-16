@@ -22,11 +22,39 @@ Aplicação fullstack para gestão de pedidos de e-commerce. Desenvolvida como d
 
 ### Início rápido
 
+**Opção A — copiar o arquivo de exemplo:**
 ```bash
-# 1. Copie o arquivo de ambiente
 cp .env.example .env
+```
 
-# 2. Suba todos os serviços (PostgreSQL + API + Frontend + ETL seed)
+**Opção B — colar diretamente (valores prontos para uso local):**
+```env
+# ─── PostgreSQL ───────────────────────────────────────────────
+POSTGRES_USER=orders_user
+POSTGRES_PASSWORD=orders_pass
+POSTGRES_DB=orders_db
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+# Assembled by docker-compose — don't change unless you know what you're doing
+DATABASE_URL=postgresql+asyncpg://orders_user:orders_pass@db:5432/orders_db
+DATABASE_URL_SYNC=postgresql://orders_user:orders_pass@db:5432/orders_db
+
+# ─── API ──────────────────────────────────────────────────────
+API_HOST=0.0.0.0
+API_PORT=8000
+
+# CORS — comma-separated origins
+CORS_ORIGINS=http://localhost:3000
+
+# ─── Auth / JWT ───────────────────────────────────────────────
+JWT_SECRET=change-me-in-production
+
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+**2. Suba todos os serviços (PostgreSQL + API + Frontend + ETL seed):**
+```bash
 docker compose up --build
 ```
 
