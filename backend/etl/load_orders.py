@@ -51,8 +51,8 @@ def _validate_all(raw_rows: list[dict]) -> tuple[list[ValidatedRow], list[str]]:
         validated, error = validate_row(row, line_number=i)
         if validated:
             valid.append(validated)
-        else:
-            errors.append(error)  # type: ignore[arg-type]
+        elif error:
+            errors.append(error)
 
     return valid, errors
 
@@ -63,8 +63,8 @@ def _get_database_url() -> str:
         try:
             from app.core.config import settings
             url = settings.database_url_sync
-        except Exception:
-            pass
+        except ImportError:
+            log.debug("app.core.config não disponível; usando apenas variável de ambiente.")
     if not url:
         raise RuntimeError("DATABASE_URL_SYNC não definida.")
     return url
@@ -127,17 +127,17 @@ def run(csv_path: Path) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Uso: python -m etl.load_orders <caminho_do_csv>", file=sys.stderr)
+        log.error("Uso: python -m etl.load_orders <caminho_do_csv>")
         sys.exit(1)
 
     csv_file = Path(sys.argv[1])
 
     if not csv_file.exists():
-        print(f"Arquivo não encontrado: {csv_file}", file=sys.stderr)
+        log.error("Arquivo não encontrado: %s", csv_file)
         sys.exit(1)
 
     if csv_file.suffix.lower() != ".csv":
-        print(f"Arquivo não é um CSV: {csv_file}", file=sys.stderr)
+        log.error("Arquivo não é um CSV: %s", csv_file)
         sys.exit(1)
 
     run(csv_file)

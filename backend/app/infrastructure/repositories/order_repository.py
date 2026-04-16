@@ -168,7 +168,8 @@ class SQLAlchemyOrderRepository:
         await self._session.flush()
 
         result = await self.get_by_id(order_id)
-        assert result is not None
+        if result is None:
+            raise RuntimeError(f"Pedido '{order_id}' não encontrado após inserção.")
         return result
 
     async def update_order(self, order_id: str, payload: OrderWritePayload) -> OrderDetail | None:

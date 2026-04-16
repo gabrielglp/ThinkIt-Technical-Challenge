@@ -129,21 +129,36 @@ def validate_row(row: dict, line_number: int) -> tuple["ValidatedRow | None", "s
     if errors:
         return None, f"Linha {line_number} [{row.get('order_id', '?')}]: {'; '.join(errors)}"
 
+    # All validations passed — these invariants are guaranteed by the checks above.
+    assert order_id is not None
+    assert customer_id is not None
+    assert customer_name is not None
+    assert customer_email is not None
+    assert product_id is not None
+    assert product_name is not None
+    assert category is not None
+    assert quantity is not None
+    assert unit_price is not None
+    assert discount_pct is not None
+    assert status is not None
+    assert created_at is not None
+    assert updated_at is not None
+
     return (
         ValidatedRow(
-            order_id=order_id,  # type: ignore[arg-type]
-            customer_id=customer_id,  # type: ignore[arg-type]
-            customer_name=customer_name,  # type: ignore[arg-type]
-            customer_email=customer_email,  # type: ignore[arg-type]
-            product_id=product_id,  # type: ignore[arg-type]
-            product_name=product_name,  # type: ignore[arg-type]
-            category=category,  # type: ignore[arg-type]
-            quantity=quantity,  # type: ignore[arg-type]
-            unit_price=unit_price,  # type: ignore[arg-type]
-            discount_pct=discount_pct,  # type: ignore[arg-type]
-            status=status,  # type: ignore[arg-type]
-            created_at=created_at,  # type: ignore[arg-type]
-            updated_at=updated_at,  # type: ignore[arg-type]
+            order_id=order_id,
+            customer_id=customer_id,
+            customer_name=customer_name,
+            customer_email=customer_email,
+            product_id=product_id,
+            product_name=product_name,
+            category=category,
+            quantity=quantity,
+            unit_price=unit_price,
+            discount_pct=discount_pct,
+            status=status,
+            created_at=created_at,
+            updated_at=updated_at,
             city=city,
             state=state,
         ),

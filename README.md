@@ -19,39 +19,21 @@ Fullstack application for e-commerce order management. Built as a technical chal
 ### Requirements
 
 - Docker and Docker Compose
-- Bun (for local frontend development only)
 
-### 1. Environment setup
+### Quick start
 
 ```bash
+# 1. Copy environment file
 cp .env.example .env
-```
 
-### 2. Start the services
+# 2. Start all services (PostgreSQL + API + Frontend)
+docker compose up --build
 
-```bash
-docker compose up -d db api
-```
-
-### 3. Load data from CSV
-
-Place `orders.csv` in the project root, then run the ETL:
-
-```bash
+# 3. (Optional) Populate the database from the sample CSV
 docker compose --profile etl up etl
 ```
 
-### 4. Start the frontend
-
-```bash
-docker compose up -d frontend
-```
-
-Or run everything at once (requires CSV in place):
-
-```bash
-docker compose up -d
-```
+The application will be available at the URLs below as soon as the containers are healthy.
 
 ### URLs
 
