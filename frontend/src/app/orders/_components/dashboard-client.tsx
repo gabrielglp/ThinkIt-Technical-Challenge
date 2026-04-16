@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
-import { Clock, DollarSign, Loader2, Package, TrendingUp } from "lucide-react";
+import { Clock, DollarSign, Loader2, Package, Plus, TrendingUp, Upload } from "lucide-react";
 import { fetchMetrics, fetchOrders } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 import { MetricCard } from "@/components/metric-card";
 import { OrdersFilters } from "@/components/orders-filters";
 import { OrdersTable } from "@/components/orders-table";
@@ -11,9 +14,11 @@ import { PaginationControls } from "@/components/pagination-controls";
 import { StatusChart } from "@/components/status-chart";
 import { StatusLineChart } from "@/components/status-line-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricCardSkeleton, OrdersTableSkeleton, StatusChartSkeleton } from "@/components/skeletons";
+import { CsvImportDialog } from "@/components/csv-import-dialog";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { OrderFilters, OrderStatus } from "@/types";
 
@@ -30,6 +35,8 @@ const FILTER_PARSERS = {
 };
 
 export function DashboardClient() {
+  const { isAuthenticated } = useAuth();
+  const [importOpen, setImportOpen] = useState(false);
   const [params, setParams] = useQueryStates(FILTER_PARSERS, {
     shallow: true,
   });
@@ -186,7 +193,7 @@ export function DashboardClient() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base">
               Pedidos
               {orders && (
@@ -195,11 +202,33 @@ export function DashboardClient() {
                 </span>
               )}
             </CardTitle>
-            {ordersFetching && !ordersLoading && (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            )}
+            <div className="flex items-center gap-2">
+              {ordersFetching && !ordersLoading && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+              {isAuthenticated && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setImportOpen(true)}
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span className="hidden sm:inline">Importar CSV</span>
+                  </Button>
+                  <Button size="sm" asChild className="gap-2">
+                    <Link href="/orders/new">
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline">Novo pedido</span>
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </CardHeader>
+        <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} />
         <CardContent className="space-y-4">
           <OrdersFilters
             filters={uiFilters}

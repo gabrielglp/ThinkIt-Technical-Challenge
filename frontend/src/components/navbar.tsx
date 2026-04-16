@@ -3,26 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Moon, Sun, LogIn, UserPlus, LogOut, User, Upload } from "lucide-react";
+import { Moon, Sun, LogIn, UserPlus, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { CsvImportDialog } from "@/components/csv-import-dialog";
-import { useState } from "react";
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [importOpen, setImportOpen] = useState(false);
 
   function handleLogout() {
     logout();
@@ -39,18 +29,6 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-2">
-          {isAuthenticated && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-              onClick={() => setImportOpen(true)}
-            >
-              <Upload className="h-4 w-4" />
-              <span className="hidden sm:inline">Importar CSV</span>
-            </Button>
-          )}
-
           <Button
             variant="ghost"
             size="icon"
@@ -62,26 +40,16 @@ export function Navbar() {
           </Button>
 
           {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <User className="h-4 w-4" />
-                  <span className="hidden sm:inline max-w-[120px] truncate">{user?.name}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href="/orders/new" className="gap-2">
-                    Novo pedido
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="gap-2 text-destructive focus:text-destructive">
-                  <LogOut className="h-4 w-4" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              <Button variant="ghost" size="sm" className="gap-2 hidden sm:flex">
+                <User className="h-4 w-4" />
+                <span className="max-w-[120px] truncate">{user?.name}</span>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 text-destructive hover:text-destructive">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sair</span>
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="ghost" size="sm" asChild>
@@ -100,8 +68,6 @@ export function Navbar() {
           )}
         </div>
       </div>
-
-      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </header>
   );
 }
