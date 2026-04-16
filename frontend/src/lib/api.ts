@@ -86,6 +86,13 @@ export async function forgotPassword(email: string): Promise<void> {
   await post<{ message: string }>("/auth/forgot-password", { email });
 }
 
+export async function resetPassword(token: string, password: string, confirmPassword: string): Promise<void> {
+  await post<{ message: string }>(`/auth/reset-password/${encodeURIComponent(token)}`, {
+    password,
+    confirm_password: confirmPassword,
+  });
+}
+
 export function loginUser(email: string, password: string): Promise<AuthToken> {
   return post<AuthToken>("/auth/login", { email, password });
 }

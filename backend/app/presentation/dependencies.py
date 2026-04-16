@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.use_cases.create_order import CreateOrderUseCase
 from app.application.use_cases.forgot_password import ForgotPasswordUseCase
+from app.application.use_cases.reset_password import ResetPasswordUseCase
 from app.application.use_cases.get_metrics import GetMetricsUseCase
 from app.application.use_cases.get_order_by_id import GetOrderByIdUseCase
 from app.application.use_cases.list_orders import ListOrdersUseCase
@@ -79,3 +80,9 @@ def get_forgot_password_use_case(
     session: AsyncSession = Depends(get_db_session),
 ) -> ForgotPasswordUseCase:
     return ForgotPasswordUseCase(SQLAlchemyUserRepository(session))
+
+
+def get_reset_password_use_case(
+    session: AsyncSession = Depends(get_db_session),
+) -> ResetPasswordUseCase:
+    return ResetPasswordUseCase(SQLAlchemyUserRepository(session))

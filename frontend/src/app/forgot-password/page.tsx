@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
         </div>
         <div className="space-y-4">
           <blockquote className="text-2xl font-light leading-relaxed">
-            "Não se preocupe — uma nova senha será enviada direto para o seu e-mail."
+            "Não se preocupe — um link seguro será enviado para você redefinir seu acesso."
           </blockquote>
           <p className="text-sm opacity-70">Recuperação de acesso segura</p>
         </div>
@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
             </div>
             <h1 className="text-2xl font-bold tracking-tight">Esqueceu a senha?</h1>
             <p className="text-sm text-muted-foreground">
-              Informe seu e-mail e enviaremos uma nova senha para você.
+              Informe seu e-mail e enviaremos um link para redefinir sua senha.
             </p>
           </div>
 
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
                   E-mail enviado!
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Se <strong>{email}</strong> estiver cadastrado, você receberá uma nova senha em instantes.
+                  Se <strong>{email}</strong> estiver cadastrado, você receberá um link de redefinição em instantes.
                 </p>
               </div>
               <Button asChild className="w-full">
@@ -94,7 +94,7 @@ export default function ForgotPasswordPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={state === "loading"}>
-                {state === "loading" ? "Enviando..." : "Enviar nova senha"}
+                {state === "loading" ? "Enviando..." : "Enviar link de redefinição"}
               </Button>
             </form>
           )}

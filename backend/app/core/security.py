@@ -23,3 +23,17 @@ def create_access_token(subject: str) -> str:
 def decode_access_token(token: str) -> str:
     payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     return str(payload["sub"])
+
+
+def create_reset_token(email: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=30)
+    payload = {"sub": email, "exp": expire, "type": "reset"}
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_reset_token(token: str) -> str:
+    payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    if payload.get("type") != "reset":
+        from jose import JWTError
+        raise JWTError("Token inválido.")
+    return str(payload["sub"])

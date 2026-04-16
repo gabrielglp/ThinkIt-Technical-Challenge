@@ -28,13 +28,14 @@ async def send_mail(to: str, subject: str, html: str) -> None:
     log.info("Email enviado para %s — assunto: %s", to, subject)
 
 
-def build_forgot_password_email(name: str, new_password: str) -> str:
+def build_reset_password_email(name: str, token: str) -> str:
+    reset_url = f"{settings.app_url}/reset-password/{token}"
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nova Senha — Função extra</title>
+  <title>Redefinição de senha — Função extra</title>
   <style>
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
     body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -45,24 +46,16 @@ def build_forgot_password_email(name: str, new_password: str) -> str:
     .subtitle {{ color: #a1a1aa; font-size: 14px; margin-top: 4px; }}
     .card {{ background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 12px;
              padding: 32px; margin-bottom: 24px; }}
-    .badge {{ display: inline-block; background: #dc2626; color: #fff; padding: 4px 10px;
+    .badge {{ display: inline-block; background: #2563eb; color: #fff; padding: 4px 10px;
               border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;
               letter-spacing: 0.5px; margin-bottom: 16px; }}
     .title {{ font-size: 24px; font-weight: 700; margin-bottom: 12px; }}
     .text {{ color: #d4d4d8; font-size: 15px; margin-bottom: 20px; }}
-    .password-box {{ background: #2a2a2a; border: 2px solid #22c55e; border-radius: 8px;
-                     padding: 20px; margin: 24px 0; text-align: center; }}
-    .password-label {{ color: #a1a1aa; font-size: 12px; font-weight: 600;
-                       text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }}
-    .password-value {{ color: #22c55e; font-size: 20px; font-weight: 700;
-                       font-family: 'Courier New', monospace; letter-spacing: 3px;
-                       background: #1a1a1a; padding: 12px 20px; border-radius: 6px;
-                       display: inline-block; margin-top: 6px; }}
-    .warning {{ background: #7f1d1d; border: 1px solid #dc2626; color: #fca5a5;
+    .warning {{ background: #1e3a5f; border: 1px solid #2563eb; color: #93c5fd;
                 padding: 14px; border-radius: 8px; margin: 20px 0; font-size: 14px; }}
     .btn {{ display: inline-block; background: #ffffff; color: #000000; text-decoration: none;
-            padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;
-            margin-top: 16px; }}
+            padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;
+            margin-top: 8px; }}
     .footer {{ text-align: center; margin-top: 32px; padding-top: 24px;
                border-top: 1px solid #2a2a2a; color: #52525b; font-size: 12px; }}
   </style>
@@ -74,24 +67,21 @@ def build_forgot_password_email(name: str, new_password: str) -> str:
       <div class="subtitle">Plataforma de gestão de pedidos</div>
     </div>
     <div class="card">
-      <div class="badge">Recuperação de senha</div>
-      <h1 class="title">🔐 Nova senha gerada</h1>
+      <div class="badge">Redefinição de senha</div>
+      <h1 class="title">Redefinir sua senha</h1>
       <p class="text">
-        Olá <strong>{name}</strong>, uma nova senha temporária foi gerada para a sua conta.
+        Olá <strong>{name}</strong>, recebemos uma solicitação para redefinir a senha da sua conta.
+        Clique no botão abaixo para criar uma nova senha.
       </p>
-      <div class="password-box">
-        <div class="password-label">Sua nova senha</div>
-        <div class="password-value">{new_password}</div>
+      <div style="text-align:center; margin: 28px 0;">
+        <a href="{reset_url}" class="btn">Redefinir senha</a>
       </div>
       <div class="warning">
-        ⚠️ Esta é uma senha temporária. Recomendamos que você altere sua senha após fazer login.
-      </div>
-      <div style="text-align:center;">
-        <a href="{settings.app_url}/login" class="btn">Fazer login agora</a>
+        ⏱️ Este link é válido por <strong>30 minutos</strong>. Após esse prazo, você precisará solicitar um novo link.
       </div>
     </div>
     <div class="footer">
-      Se você não solicitou esta alteração, ignore este email — sua senha antiga continua válida.<br>
+      Se você não solicitou a redefinição de senha, ignore este email — sua senha atual continua válida.<br>
       Este email foi enviado automaticamente. Não responda a este email.
     </div>
   </div>

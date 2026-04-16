@@ -1,8 +1,5 @@
-import random
-import string
-
-from app.core.email import build_forgot_password_email, send_mail
-from app.core.security import hash_password
+from app.core.email import build_reset_password_email, send_mail
+from app.core.security import create_reset_token
 from app.domain.repositories import UserRepository
 
 
@@ -19,22 +16,6 @@ class ForgotPasswordUseCase:
         if not user:
             raise UserNotFoundError("E-mail não cadastrado.")
 
-        new_password = _generate_password()
-        await self._repository.update_password(user.id, hash_password(new_password))
-
-        html = build_forgot_password_email(name=user.name, new_password=new_password)
-        await send_mail(to=user.email, subject="Nova senha — Função extra", html=html)
-
-
-def _generate_password(length: int = 12) -> str:
-    chars = string.ascii_letters + string.digits + "!@#$%&*"
-    mandatory = [
-        random.choice(string.ascii_uppercase),
-        random.choice(string.ascii_lowercase),
-        random.choice(string.digits),
-        random.choice("!@#$%&*"),
-    ]
-    rest = [random.choice(chars) for _ in range(length - len(mandatory))]
-    pool = mandatory + rest
-    random.shuffle(pool)
-    return "".join(pool)
+        token = create_reset_token(user.email)
+        html = build_reset_password_email(name=user.name, token=token)
+        await send_mail(to=user.email, subject="Redefinição de senha — Função extra", html=html)
