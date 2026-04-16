@@ -1,7 +1,7 @@
 from typing import Protocol, runtime_checkable
 
 from app.domain.entities import Metrics, Order, OrderDetail, User
-from app.domain.value_objects import OrderFilters, Pagination, PaginatedResult
+from app.domain.value_objects import OrderFilters, OrderWritePayload, Pagination, PaginatedResult
 
 
 @runtime_checkable
@@ -14,9 +14,9 @@ class OrderRepository(Protocol):
 
     async def get_by_id(self, order_id: str) -> OrderDetail | None: ...
 
-    async def create_order(self, payload: "OrderWritePayload") -> OrderDetail: ...
+    async def create_order(self, payload: OrderWritePayload) -> OrderDetail: ...
 
-    async def update_order(self, order_id: str, payload: "OrderWritePayload") -> OrderDetail | None: ...
+    async def update_order(self, order_id: str, payload: OrderWritePayload) -> OrderDetail | None: ...
 
 
 @runtime_checkable

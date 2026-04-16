@@ -26,7 +26,3 @@ def upload_bytes(key: str, data: bytes, content_type: str = "text/csv") -> str:
     return key
 
 
-def download_bytes(key: str) -> bytes:
-    client = get_s3_client()
-    response = client.get_object(Bucket=settings.aws_bucket_name, Key=key)
-    return response["Body"].read()
