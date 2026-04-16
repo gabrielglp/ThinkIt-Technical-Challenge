@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { registerUser } from "@/lib/api";
+import { registerSchema } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,13 +21,23 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 6) {
-      toast({ title: "A senha deve ter ao menos 6 caracteres.", variant: "destructive" });
+    setErrors({});
+
+    const result = registerSchema.safeParse({ name, email, password });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as string;
+        fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
       return;
     }
+
     setLoading(true);
     try {
       const data = await registerUser(name, email, password);
@@ -79,9 +90,10 @@ export default function RegisterPage() {
                 placeholder="Seu nome"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
                 autoComplete="name"
+                aria-invalid={!!errors.name}
               />
+              {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
             </div>
 
             <div className="space-y-2">
@@ -92,9 +104,10 @@ export default function RegisterPage() {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 autoComplete="email"
+                aria-invalid={!!errors.email}
               />
+              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -103,12 +116,12 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres com ao menos 1 número"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                   autoComplete="new-password"
                   className="pr-10"
+                  aria-invalid={!!errors.password}
                 />
                 <button
                   type="button"
@@ -118,6 +131,7 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

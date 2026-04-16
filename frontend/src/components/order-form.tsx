@@ -6,6 +6,7 @@ import { Plus, Trash2, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { createOrder, updateOrder } from "@/lib/api";
+import { orderSchema } from "@/lib/schemas";
 import type { OrderDetail, OrderItemWritePayload, OrderStatus, OrderWritePayload } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -218,6 +219,7 @@ export function OrderForm({ order }: Props) {
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -266,6 +268,26 @@ export function OrderForm({ order }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
+    setFormErrors({});
+
+    const result = orderSchema.safeParse({
+      customer_id: form.customer_id,
+      customer_name: form.customer_name,
+      customer_email: form.customer_email,
+      status: form.status,
+      items: form.items,
+    });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const path = issue.path.join(".");
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message;
+      }
+      setFormErrors(fieldErrors);
+      toast({ title: "Corrija os erros antes de salvar.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = toPayload(form);
@@ -302,9 +324,10 @@ export function OrderForm({ order }: Props) {
               id="customer_id"
               value={form.customer_id}
               onChange={(e) => setField("customer_id", e.target.value)}
-              placeholder="CUST-001"
-              required
+              placeholder="CLI-00001"
+              aria-invalid={!!formErrors.customer_id}
             />
+            {formErrors.customer_id && <p className="text-xs text-destructive">{formErrors.customer_id}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="customer_name">Nome do cliente</Label>
@@ -313,8 +336,9 @@ export function OrderForm({ order }: Props) {
               value={form.customer_name}
               onChange={(e) => setField("customer_name", e.target.value)}
               placeholder="João Silva"
-              required
+              aria-invalid={!!formErrors.customer_name}
             />
+            {formErrors.customer_name && <p className="text-xs text-destructive">{formErrors.customer_name}</p>}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="customer_email">E-mail do cliente</Label>
@@ -324,8 +348,9 @@ export function OrderForm({ order }: Props) {
               value={form.customer_email}
               onChange={(e) => setField("customer_email", e.target.value)}
               placeholder="cliente@email.com"
-              required
+              aria-invalid={!!formErrors.customer_email}
             />
+            {formErrors.customer_email && <p className="text-xs text-destructive">{formErrors.customer_email}</p>}
           </div>
         </div>
 

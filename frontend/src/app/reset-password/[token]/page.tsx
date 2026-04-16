@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { resetPassword } from "@/lib/api";
+import { resetPasswordSchema } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,12 +22,20 @@ export default function ResetPasswordPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setErrors({});
 
-    if (password !== confirmPassword) {
-      toast({ title: "As senhas não coincidem.", variant: "destructive" });
+    const result = resetPasswordSchema.safeParse({ password, confirmPassword });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as string;
+        fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
       return;
     }
 
@@ -100,10 +109,9 @@ export default function ResetPasswordPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
                   autoComplete="new-password"
                   className="pr-10"
+                  aria-invalid={!!errors.password}
                 />
                 <button
                   type="button"
@@ -113,6 +121,7 @@ export default function ResetPasswordPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
             </div>
 
             <div className="space-y-2">
@@ -124,10 +133,9 @@ export default function ResetPasswordPage() {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
                   autoComplete="new-password"
                   className="pr-10"
+                  aria-invalid={!!errors.confirmPassword}
                 />
                 <button
                   type="button"
@@ -137,6 +145,7 @@ export default function ResetPasswordPage() {
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

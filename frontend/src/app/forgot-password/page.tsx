@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail } from "lucide-react";
 import { forgotPassword } from "@/lib/api";
+import { forgotPasswordSchema } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +15,18 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setEmailError("");
+
+    const result = forgotPasswordSchema.safeParse({ email });
+    if (!result.success) {
+      setEmailError(result.error.issues[0].message);
+      return;
+    }
+
     setState("loading");
     setErrorMsg("");
     try {
@@ -84,9 +94,10 @@ export default function ForgotPasswordPage() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                   autoComplete="email"
+                  aria-invalid={!!emailError}
                 />
+                {emailError && <p className="text-xs text-destructive">{emailError}</p>}
               </div>
 
               {state === "error" && (

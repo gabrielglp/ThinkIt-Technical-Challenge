@@ -24,6 +24,7 @@
         "react-dom": "^19.0.0",
         "recharts": "^2.13.3",
         "tailwind-merge": "^2.5.5",
+        "zod": "^4.3.6",
       },
       "devDependencies": {
         "@types/node": "^22.10.2",

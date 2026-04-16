@@ -1,11 +1,12 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.application.use_cases.forgot_password import ForgotPasswordUseCase, UserNotFoundError
 from app.application.use_cases.login_user import InvalidCredentialsError, LoginUserUseCase
 from app.application.use_cases.register_user import EmailAlreadyExistsError, RegisterUserUseCase
 from app.application.use_cases.reset_password import InvalidTokenError, PasswordMismatchError, ResetPasswordUseCase
+from app.core.limiter import limiter
 from app.core.security import create_access_token
 from app.presentation.dependencies import get_forgot_password_use_case, get_login_use_case, get_register_use_case, get_reset_password_use_case
 from app.presentation.schemas.auth_schemas import AuthResponse, ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest, UserResponse
@@ -25,9 +26,12 @@ router = APIRouter()
         201: {"description": "Conta criada com sucesso."},
         409: {"description": "E-mail já cadastrado."},
         422: {"description": "Dados de entrada inválidos."},
+        429: {"description": "Muitas tentativas. Aguarde antes de tentar novamente."},
     },
 )
+@limiter.limit("10/minute")
 async def register(
+    request: Request,
     body: RegisterRequest,
     use_case: RegisterUserUseCase = Depends(get_register_use_case),
 ) -> AuthResponse:
@@ -48,9 +52,12 @@ async def register(
         200: {"description": "Autenticação bem-sucedida."},
         401: {"description": "Credenciais inválidas."},
         422: {"description": "Dados de entrada inválidos."},
+        429: {"description": "Muitas tentativas. Aguarde antes de tentar novamente."},
     },
 )
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     body: LoginRequest,
     use_case: LoginUserUseCase = Depends(get_login_use_case),
 ) -> AuthResponse:
@@ -72,10 +79,13 @@ async def login(
     ),
     responses={
         200: {"description": "E-mail de recuperação enviado (se o endereço existir)."},
+        429: {"description": "Muitas tentativas. Aguarde antes de tentar novamente."},
         500: {"description": "Falha ao enviar e-mail. Tente novamente."},
     },
 )
+@limiter.limit("3/minute")
 async def forgot_password(
+    request: Request,
     body: ForgotPasswordRequest,
     use_case: ForgotPasswordUseCase = Depends(get_forgot_password_use_case),
 ) -> dict[str, str]:
@@ -98,9 +108,12 @@ async def forgot_password(
         200: {"description": "Senha redefinida com sucesso."},
         400: {"description": "Senhas não coincidem ou token inválido/expirado."},
         422: {"description": "Dados de entrada inválidos."},
+        429: {"description": "Muitas tentativas. Aguarde antes de tentar novamente."},
     },
 )
+@limiter.limit("5/minute")
 async def reset_password(
+    request: Request,
     token: str,
     body: ResetPasswordRequest,
     use_case: ResetPasswordUseCase = Depends(get_reset_password_use_case),
