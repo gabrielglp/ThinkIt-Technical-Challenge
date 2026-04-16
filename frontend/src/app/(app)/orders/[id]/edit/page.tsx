@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchOrderById } from "@/lib/api";
@@ -10,20 +9,15 @@ import { OrderForm } from "@/components/order-form";
 export default function EditOrderPage() {
   const params = useParams();
   const orderId = params.id as string;
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) router.replace("/login");
-  }, [isAuthenticated, router]);
+  const { isHydrated, isAuthenticated } = useAuth();
 
   const { data: order, isLoading, isError } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => fetchOrderById(orderId),
-    enabled: isAuthenticated,
+    enabled: isHydrated && isAuthenticated,
   });
 
-  if (!isAuthenticated) return null;
+  if (!isHydrated || !isAuthenticated) return null;
 
   if (isLoading) {
     return (

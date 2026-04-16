@@ -1,19 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { OrderForm } from "@/components/order-form";
 
 export default function NewOrderPage() {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
+  const { isHydrated, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (!isAuthenticated) router.replace("/login");
-  }, [isAuthenticated, router]);
-
-  if (!isAuthenticated) return null;
+  if (!isHydrated || !isAuthenticated) return null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
