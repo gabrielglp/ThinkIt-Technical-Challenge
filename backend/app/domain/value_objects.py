@@ -60,3 +60,26 @@ class PaginatedResult(Generic[T]):
     @property
     def has_previous(self) -> bool:
         return self.page > 1
+
+
+@dataclass(frozen=True)
+class OrderItemPayload:
+    product_id: str
+    product_name: str
+    category: str
+    quantity: int
+    unit_price: Decimal
+    discount_pct: Decimal
+
+
+@dataclass(frozen=True)
+class OrderWritePayload:
+    customer_id: str
+    customer_name: str
+    customer_email: str
+    city: str | None
+    state: str | None
+    status: OrderStatus
+    created_at: datetime
+    updated_at: datetime
+    items: list[OrderItemPayload]

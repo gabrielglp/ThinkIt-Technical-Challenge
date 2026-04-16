@@ -7,7 +7,19 @@ from app.presentation.schemas.metrics_schemas import MetricsSchema, StatusCountS
 router = APIRouter()
 
 
-@router.get("", response_model=MetricsSchema)
+@router.get(
+    "",
+    response_model=MetricsSchema,
+    summary="Obter métricas do dashboard",
+    description=(
+        "Retorna métricas agregadas: ticket médio, receita total, total de pedidos, "
+        "top 5 produtos por receita e volume de pedidos por status."
+    ),
+    responses={
+        200: {"description": "Métricas calculadas com sucesso."},
+        500: {"description": "Erro ao calcular métricas."},
+    },
+)
 async def get_metrics(
     use_case: GetMetricsUseCase = Depends(get_metrics_use_case),
 ) -> MetricsSchema:

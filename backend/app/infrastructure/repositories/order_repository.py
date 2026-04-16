@@ -1,11 +1,13 @@
+import uuid
 from decimal import Decimal
 
 from sqlalchemy import Numeric, String, bindparam, text
 from sqlalchemy.dialects.postgresql import TIMESTAMP
+from sqlalchemy.engine import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Customer, Order, OrderDetail, OrderItem
-from app.domain.value_objects import OrderFilters, OrderStatus, Pagination, PaginatedResult
+from app.domain.value_objects import OrderFilters, OrderStatus, OrderWritePayload, Pagination, PaginatedResult
 
 _LIST_ORDERS_SQL = text("""
     WITH order_totals AS (
@@ -88,15 +90,8 @@ class SQLAlchemyOrderRepository:
     async def get_by_id(self, order_id: str) -> OrderDetail | None:
         order_row = (await self._session.execute(text("""
             SELECT
-                o.order_id,
-                o.status,
-                o.created_at,
-                o.updated_at,
-                c.customer_id,
-                c.customer_name,
-                c.customer_email,
-                c.city,
-                c.state
+                o.order_id, o.status, o.created_at, o.updated_at,
+                c.customer_id, c.customer_name, c.customer_email, c.city, c.state
             FROM orders o
             JOIN customers c ON c.customer_id = o.customer_id
             WHERE o.order_id = :order_id
@@ -105,21 +100,155 @@ class SQLAlchemyOrderRepository:
         if not order_row:
             return None
 
+        return await self._fetch_detail(order_row)
+
+    async def create_order(self, payload: OrderWritePayload) -> OrderDetail:
+        # Upsert customer
+        await self._session.execute(text("""
+            INSERT INTO customers (customer_id, customer_name, customer_email, city, state)
+            VALUES (:customer_id, :customer_name, :customer_email, :city, :state)
+            ON CONFLICT (customer_id) DO UPDATE SET
+                customer_name  = EXCLUDED.customer_name,
+                customer_email = EXCLUDED.customer_email,
+                city           = EXCLUDED.city,
+                state          = EXCLUDED.state,
+                updated_at     = NOW()
+        """), {
+            "customer_id": payload.customer_id,
+            "customer_name": payload.customer_name,
+            "customer_email": payload.customer_email,
+            "city": payload.city,
+            "state": payload.state,
+        })
+
+        # Upsert products
+        for item in payload.items:
+            await self._session.execute(text("""
+                INSERT INTO products (product_id, product_name, category)
+                VALUES (:product_id, :product_name, :category)
+                ON CONFLICT (product_id) DO UPDATE SET
+                    product_name = EXCLUDED.product_name,
+                    category     = EXCLUDED.category,
+                    updated_at   = NOW()
+            """), {"product_id": item.product_id, "product_name": item.product_name, "category": item.category})
+
+        # Generate order_id
+        max_row = (await self._session.execute(text(
+            "SELECT order_id FROM orders ORDER BY order_id DESC LIMIT 1"
+        ))).scalar()
+        if max_row and max_row.startswith("ORD-"):
+            next_num = int(max_row[4:]) + 1
+        else:
+            next_num = 1
+        order_id = f"ORD-{next_num:05d}"
+
+        await self._session.execute(text("""
+            INSERT INTO orders (order_id, customer_id, status, created_at, updated_at)
+            VALUES (:order_id, :customer_id, :status, :created_at, :updated_at)
+        """), {
+            "order_id": order_id,
+            "customer_id": payload.customer_id,
+            "status": payload.status.value,
+            "created_at": payload.created_at,
+            "updated_at": payload.updated_at,
+        })
+
+        for item in payload.items:
+            await self._session.execute(text("""
+                INSERT INTO order_items (order_id, product_id, quantity, unit_price, discount_pct)
+                VALUES (:order_id, :product_id, :quantity, :unit_price, :discount_pct)
+            """), {
+                "order_id": order_id,
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "unit_price": float(item.unit_price),
+                "discount_pct": float(item.discount_pct),
+            })
+
+        await self._session.flush()
+
+        result = await self.get_by_id(order_id)
+        assert result is not None
+        return result
+
+    async def update_order(self, order_id: str, payload: OrderWritePayload) -> OrderDetail | None:
+        exists = (await self._session.execute(
+            text("SELECT 1 FROM orders WHERE order_id = :id"), {"id": order_id}
+        )).scalar()
+        if not exists:
+            return None
+
+        # Upsert customer
+        await self._session.execute(text("""
+            INSERT INTO customers (customer_id, customer_name, customer_email, city, state)
+            VALUES (:customer_id, :customer_name, :customer_email, :city, :state)
+            ON CONFLICT (customer_id) DO UPDATE SET
+                customer_name  = EXCLUDED.customer_name,
+                customer_email = EXCLUDED.customer_email,
+                city           = EXCLUDED.city,
+                state          = EXCLUDED.state,
+                updated_at     = NOW()
+        """), {
+            "customer_id": payload.customer_id,
+            "customer_name": payload.customer_name,
+            "customer_email": payload.customer_email,
+            "city": payload.city,
+            "state": payload.state,
+        })
+
+        await self._session.execute(text("""
+            UPDATE orders
+            SET customer_id = :customer_id, status = :status,
+                created_at = :created_at, updated_at = :updated_at
+            WHERE order_id = :order_id
+        """), {
+            "order_id": order_id,
+            "customer_id": payload.customer_id,
+            "status": payload.status.value,
+            "created_at": payload.created_at,
+            "updated_at": payload.updated_at,
+        })
+
+        # Replace items
+        await self._session.execute(
+            text("DELETE FROM order_items WHERE order_id = :order_id"),
+            {"order_id": order_id},
+        )
+
+        for item in payload.items:
+            await self._session.execute(text("""
+                INSERT INTO products (product_id, product_name, category)
+                VALUES (:product_id, :product_name, :category)
+                ON CONFLICT (product_id) DO UPDATE SET
+                    product_name = EXCLUDED.product_name,
+                    category     = EXCLUDED.category,
+                    updated_at   = NOW()
+            """), {"product_id": item.product_id, "product_name": item.product_name, "category": item.category})
+
+            await self._session.execute(text("""
+                INSERT INTO order_items (order_id, product_id, quantity, unit_price, discount_pct)
+                VALUES (:order_id, :product_id, :quantity, :unit_price, :discount_pct)
+            """), {
+                "order_id": order_id,
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "unit_price": float(item.unit_price),
+                "discount_pct": float(item.discount_pct),
+            })
+
+        await self._session.flush()
+        return await self.get_by_id(order_id)
+
+    async def _fetch_detail(self, order_row: RowMapping) -> OrderDetail:
         item_rows = (await self._session.execute(text("""
             SELECT
-                oi.id,
-                oi.order_id,
-                oi.product_id,
-                p.product_name,
-                p.category,
-                oi.quantity,
-                oi.unit_price,
-                oi.discount_pct,
-                oi.total_price
+                oi.id, oi.order_id, oi.product_id,
+                p.product_name, p.category,
+                oi.quantity, oi.unit_price, oi.discount_pct, oi.total_price
             FROM order_items oi
             JOIN products p ON p.product_id = oi.product_id
             WHERE oi.order_id = :order_id
-        """), {"order_id": order_id})).mappings().all()
+        """), {"order_id": order_row["order_id"]})).mappings().all()
 
         items = [
             OrderItem(
