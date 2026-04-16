@@ -72,6 +72,14 @@ class StatusCount:
 
 
 @dataclass(frozen=True)
+class User:
+    id: str
+    name: str
+    email: str
+    hashed_password: str
+
+
+@dataclass(frozen=True)
 class Metrics:
     average_ticket: Decimal
     top_products: list[TopProduct]
