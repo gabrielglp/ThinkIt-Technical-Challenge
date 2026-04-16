@@ -3,6 +3,10 @@
 .env.local
 .env.*.local
 
+# ─── Production compose (contains real credentials) ───────────
+docker-compose.prod.api.yml
+docker-compose.prod.frontend.yml
+
 # ─── Python ───────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
