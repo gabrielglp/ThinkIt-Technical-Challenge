@@ -2,14 +2,15 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 
-log = logging.getLogger(__name__)
-
 from app.application.use_cases.forgot_password import ForgotPasswordUseCase, UserNotFoundError
 from app.application.use_cases.login_user import InvalidCredentialsError, LoginUserUseCase
 from app.application.use_cases.register_user import EmailAlreadyExistsError, RegisterUserUseCase
+from app.application.use_cases.reset_password import InvalidTokenError, PasswordMismatchError, ResetPasswordUseCase
 from app.core.security import create_access_token
-from app.presentation.dependencies import get_forgot_password_use_case, get_login_use_case, get_register_use_case
-from app.presentation.schemas.auth_schemas import AuthResponse, ForgotPasswordRequest, LoginRequest, RegisterRequest, UserResponse
+from app.presentation.dependencies import get_forgot_password_use_case, get_login_use_case, get_register_use_case, get_reset_password_use_case
+from app.presentation.schemas.auth_schemas import AuthResponse, ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest, UserResponse
+
+log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -66,7 +67,7 @@ async def login(
     status_code=200,
     summary="Esqueceu a senha",
     description=(
-        "Gera uma nova senha aleatória, atualiza no banco e envia por e-mail para o usuário. "
+        "Envia um link de redefinição de senha por e-mail. O link contém um token JWT válido por 30 minutos. "
         "Por segurança, retorna 200 mesmo quando o e-mail não está cadastrado."
     ),
     responses={
@@ -85,4 +86,29 @@ async def forgot_password(
     except Exception as exc:
         log.exception("Erro ao processar forgot-password para %s: %s", body.email, exc)
         raise HTTPException(status_code=500, detail="Falha ao enviar e-mail de recuperação. Tente novamente.")
-    return {"message": "Se o e-mail estiver cadastrado, uma nova senha foi enviada."}
+    return {"message": "Se o e-mail estiver cadastrado, um link de redefinição foi enviado."}
+
+
+@router.post(
+    "/reset-password/{token}",
+    status_code=200,
+    summary="Redefinir senha via token",
+    description="Valida o token de redefinição e atualiza a senha do usuário.",
+    responses={
+        200: {"description": "Senha redefinida com sucesso."},
+        400: {"description": "Senhas não coincidem ou token inválido/expirado."},
+        422: {"description": "Dados de entrada inválidos."},
+    },
+)
+async def reset_password(
+    token: str,
+    body: ResetPasswordRequest,
+    use_case: ResetPasswordUseCase = Depends(get_reset_password_use_case),
+) -> dict[str, str]:
+    try:
+        await use_case.execute(token, body.password, body.confirm_password)
+    except PasswordMismatchError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except InvalidTokenError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {"message": "Senha redefinida com sucesso."}
