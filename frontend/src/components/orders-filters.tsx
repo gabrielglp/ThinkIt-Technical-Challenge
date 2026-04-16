@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,62 @@ const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
   { value: "cancelled", label: "Cancelado" },
 ];
 
+function formatCents(cents: number): string {
+  if (cents === 0) return "";
+  return (cents / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function parseCents(raw: string): number {
+  const digits = raw.replace(/\D/g, "");
+  return parseInt(digits || "0", 10);
+}
+
+interface CurrencyFilterInputProps {
+  placeholder: string;
+  value: string | undefined;
+  onCommit: (value: string | undefined) => void;
+  className?: string;
+}
+
+function CurrencyFilterInput({ placeholder, value, onCommit, className }: CurrencyFilterInputProps) {
+  const initialCents = value ? Math.round(parseFloat(value) * 100) : 0;
+  const [cents, setCents] = useState(initialCents);
+  const [display, setDisplay] = useState(formatCents(initialCents));
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const c = parseCents(e.target.value);
+    setCents(c);
+    setDisplay(formatCents(c));
+  }
+
+  function commit() {
+    onCommit(cents > 0 ? (cents / 100).toFixed(2) : undefined);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") commit();
+  }
+
+  function handleBlur() {
+    commit();
+  }
+
+  return (
+    <Input
+      inputMode="numeric"
+      placeholder={placeholder}
+      value={display}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      className={className}
+    />
+  );
+}
+
 interface OrdersFiltersProps {
   filters: OrderFilters;
   onChange: (filters: OrderFilters) => void;
@@ -27,9 +84,16 @@ interface OrdersFiltersProps {
 }
 
 export function OrdersFilters({ filters, onChange, onClear }: OrdersFiltersProps) {
+  const [clearKey, setClearKey] = useState(0);
+
   const hasActiveFilters = Object.values(filters).some(
     (v) => v !== undefined && v !== "" && v !== 1 && v !== 20
   );
+
+  function handleClear() {
+    setClearKey((k) => k + 1);
+    onClear();
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -70,26 +134,24 @@ export function OrdersFilters({ filters, onChange, onClear }: OrdersFiltersProps
           }
         />
 
-        <Input
-          type="number"
+        <CurrencyFilterInput
+          key={`min-${clearKey}`}
           placeholder="Valor mín."
-          value={filters.min_value ?? ""}
-          onChange={(e) => onChange({ ...filters, min_value: e.target.value || undefined, page: 1 })}
-          className="w-[120px]"
-          min={0}
+          value={filters.min_value}
+          onCommit={(v) => onChange({ ...filters, min_value: v, page: 1 })}
+          className="w-[130px]"
         />
 
-        <Input
-          type="number"
+        <CurrencyFilterInput
+          key={`max-${clearKey}`}
           placeholder="Valor máx."
-          value={filters.max_value ?? ""}
-          onChange={(e) => onChange({ ...filters, max_value: e.target.value || undefined, page: 1 })}
-          className="w-[120px]"
-          min={0}
+          value={filters.max_value}
+          onCommit={(v) => onChange({ ...filters, max_value: v, page: 1 })}
+          className="w-[130px]"
         />
 
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={onClear} className="gap-1">
+          <Button variant="ghost" size="sm" onClick={handleClear} className="gap-1">
             <X className="h-4 w-4" />
             Limpar
           </Button>
