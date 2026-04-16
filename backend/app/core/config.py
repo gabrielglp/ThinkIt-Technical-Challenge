@@ -9,8 +9,8 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    database_url: str = "postgresql+asyncpg://orders_user:orders_pass@db:5432/orders_db"
-    database_url_sync: str = "postgresql://orders_user:orders_pass@db:5432/orders_db"
+    database_url: str = "postgresql+asyncpg://orders_user:orders_pass@db:15432/orders_db"
+    database_url_sync: str = "postgresql://orders_user:orders_pass@db:15432/orders_db"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     cors_origins: str = "http://localhost:3000"

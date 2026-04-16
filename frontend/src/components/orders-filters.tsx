@@ -86,8 +86,12 @@ interface OrdersFiltersProps {
 export function OrdersFilters({ filters, onChange, onClear }: OrdersFiltersProps) {
   const [clearKey, setClearKey] = useState(0);
 
-  const hasActiveFilters = Object.values(filters).some(
-    (v) => v !== undefined && v !== "" && v !== 1 && v !== 20
+  const hasActiveFilters = Object.entries(filters).some(
+    ([key, v]) =>
+      key !== "page" &&
+      key !== "page_size" &&
+      v !== undefined &&
+      v !== ""
   );
 
   function handleClear() {
@@ -109,15 +113,16 @@ export function OrdersFilters({ filters, onChange, onClear }: OrdersFiltersProps
         </div>
 
         <Select
-          value={filters.status ?? ""}
+          value={filters.status ?? "all"}
           onValueChange={(v) =>
-            onChange({ ...filters, status: (v as OrderStatus) || undefined, page: 1 })
+            onChange({ ...filters, status: v === "all" ? undefined : (v as OrderStatus), page: 1 })
           }
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
             {STATUS_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
