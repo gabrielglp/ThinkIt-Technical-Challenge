@@ -1,5 +1,6 @@
 import io
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 from decimal import Decimal
 
 import pandas as pd
@@ -142,13 +143,15 @@ async def update_order(
     status_code=200,
     summary="Importar pedidos via CSV",
     description=(
-        "Processa um arquivo `.csv` e importa os pedidos de forma idempotente (upsert). "
-        "Requer autenticação JWT. Retorna relatório com contagem de registros válidos, inválidos e erros por linha."
+        "Faz upload do `.csv` para o bucket S3, processa os pedidos de forma idempotente (upsert) "
+        "e retorna relatório com contagem de registros válidos, inválidos, erros por linha e a chave S3 do arquivo salvo. "
+        "Requer autenticação JWT."
     ),
     responses={
-        200: {"description": "Importação concluída. Relatório com válidos, inválidos e erros."},
+        200: {"description": "Importação concluída. Relatório com válidos, inválidos, erros e s3_key."},
         401: {"description": "Token ausente ou inválido."},
-        422: {"description": "Arquivo inválido ou nenhuma linha processável."},
+        422: {"description": "Arquivo inválido, não-CSV ou nenhuma linha processável."},
+        500: {"description": "Falha ao fazer upload para o S3."},
     },
 )
 async def import_orders_csv(
@@ -159,6 +162,17 @@ async def import_orders_csv(
         raise HTTPException(status_code=422, detail="Envie um arquivo .csv válido.")
 
     content = await file.read()
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    safe_name = file.filename.replace(" ", "_")
+    s3_key = f"csv-imports/{timestamp}_{uuid.uuid4().hex[:8]}_{safe_name}"
+
+    try:
+        from app.core.storage import upload_bytes
+        upload_bytes(s3_key, content)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Falha ao fazer upload do CSV para o S3.")
+
     try:
         df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False)
     except Exception:
@@ -193,6 +207,7 @@ async def import_orders_csv(
             report = load(session, entities)
 
     return {
+        "s3_key": s3_key,
         "valid_rows": len(valid_rows),
         "invalid_rows": len(errors),
         "errors": errors,

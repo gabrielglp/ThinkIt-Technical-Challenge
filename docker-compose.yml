@@ -43,6 +43,11 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
       APP_URL: ${APP_URL:-http://localhost:3000}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME:-ebook}
+      AWS_REGION: ${AWS_REGION:-US1}
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT:-https://gateway.storjshare.io}
     ports:
       - "8000:8000"
     depends_on:

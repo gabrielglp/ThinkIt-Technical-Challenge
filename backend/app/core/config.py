@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     smtp_from_email: str = "noreply@simintermediacoes.com"
     app_url: str = "http://localhost:3000"
 
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_bucket_name: str = "ebook"
+    aws_region: str = "US1"
+    aws_s3_endpoint: str = "https://gateway.storjshare.io"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]
