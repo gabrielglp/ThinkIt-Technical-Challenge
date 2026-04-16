@@ -35,3 +35,9 @@ class SQLAlchemyUserRepository:
             {"id": user.id, "name": user.name, "email": user.email, "hashed_password": user.hashed_password},
         )
         return user
+
+    async def update_password(self, user_id: str, hashed_password: str) -> None:
+        await self._session.execute(
+            text("UPDATE users SET hashed_password = :hashed_password WHERE id = :id"),
+            {"id": user_id, "hashed_password": hashed_password},
+        )

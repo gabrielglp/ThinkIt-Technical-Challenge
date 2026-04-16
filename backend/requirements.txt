@@ -25,5 +25,8 @@ python-jose[cryptography]==3.3.0
 bcrypt==4.0.1
 python-multipart==0.0.20
 
+# ─── Email ────────────────────────────────────────────────────
+aiosmtplib==3.0.2
+
 # ─── Utils ────────────────────────────────────────────────────
 python-dotenv==1.0.1

@@ -16,7 +16,14 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 60 * 24 * 7  # 7 days
+    jwt_expire_minutes: int = 60 * 24 * 7
+
+    smtp_host: str = "simintermediacoes.com"
+    smtp_port: int = 465
+    smtp_user: str = "noreply@simintermediacoes.com"
+    smtp_password: str = ""
+    smtp_from_email: str = "noreply@simintermediacoes.com"
+    app_url: str = "http://localhost:3000"
 
     @property
     def cors_origins_list(self) -> list[str]:
