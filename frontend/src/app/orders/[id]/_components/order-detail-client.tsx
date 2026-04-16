@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Mail, MapPin, User } from "lucide-react";
+import { ArrowLeft, Mail, MapPin, Pencil, User } from "lucide-react";
 import { fetchOrderById } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +18,7 @@ interface OrderDetailClientProps {
 }
 
 export function OrderDetailClient({ orderId }: OrderDetailClientProps) {
+  const { isAuthenticated } = useAuth();
   const { data: order, isLoading, isError } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => fetchOrderById(orderId),
@@ -68,7 +70,17 @@ export function OrderDetailClient({ orderId }: OrderDetailClientProps) {
             Atualizado em {formatDate(order.updated_at)}
           </p>
         </div>
-        <StatusBadge status={order.status} />
+        <div className="flex items-center gap-3">
+          <StatusBadge status={order.status} />
+          {isAuthenticated && (
+            <Link href={`/orders/${order.order_id}/edit`}>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Pencil className="h-4 w-4" />
+                Editar
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <Separator />
