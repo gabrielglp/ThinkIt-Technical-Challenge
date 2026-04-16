@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 import type { Order } from "@/types";
 
 const ROW_HEIGHT = "h-[53px]";
@@ -14,6 +17,7 @@ interface OrdersTableProps {
 }
 
 export function OrdersTable({ orders, pageSize }: OrdersTableProps) {
+  const { isAuthenticated } = useAuth();
   const emptyRows = pageSize ? Math.max(0, pageSize - orders.length) : 0;
 
   if (orders.length === 0 && !pageSize) {
@@ -33,7 +37,7 @@ export function OrdersTable({ orders, pageSize }: OrdersTableProps) {
           <TableHead>Status</TableHead>
           <TableHead>Data</TableHead>
           <TableHead className="text-right">Total</TableHead>
-          <TableHead className="w-[60px]" />
+          <TableHead className={isAuthenticated ? "w-[100px]" : "w-[60px]"} />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -64,11 +68,20 @@ export function OrdersTable({ orders, pageSize }: OrdersTableProps) {
                   {formatCurrency(order.total_amount)}
                 </TableCell>
                 <TableCell>
-                  <Link href={`/orders/${order.order_id}`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <div className="flex items-center justify-end gap-1">
+                    {isAuthenticated && (
+                      <Link href={`/orders/${order.order_id}/edit`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                    <Link href={`/orders/${order.order_id}`}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

@@ -80,3 +80,46 @@ export interface OrderFilters {
   page?: number;
   page_size?: number;
 }
+
+export interface OrderItemWritePayload {
+  product_id: string;
+  product_name: string;
+  category: string;
+  quantity: number;
+  unit_price: number;
+  discount_pct: number;
+}
+
+export interface OrderWritePayload {
+  customer_id: string;
+  customer_name: string;
+  customer_email: string;
+  city: string;
+  state: string;
+  status: OrderStatus;
+  created_at: string;
+  updated_at: string;
+  items: OrderItemWritePayload[];
+}
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface AuthToken {
+  access_token: string;
+  token_type: string;
+  user: UserResponse;
+}
+
+export interface ImportCsvReport {
+  valid_rows: number;
+  invalid_rows: number;
+  errors: string[];
+  customers_upserted: number;
+  products_upserted: number;
+  orders_upserted: number;
+  order_items_inserted: number;
+}
