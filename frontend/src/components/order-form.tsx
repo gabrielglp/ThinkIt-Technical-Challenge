@@ -11,6 +11,7 @@ import type { OrderDetail, OrderItemWritePayload, OrderStatus, OrderWritePayload
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/date-picker";
 import {
   Select,
   SelectContent,
@@ -88,8 +89,8 @@ function CategoryCombobox({ value, onChange }: { value: string; onChange: (v: st
         <Search className="h-4 w-4 text-muted-foreground shrink-0" />
         <input
           className="flex h-9 w-full bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground"
-          placeholder={value || "Pesquisar categoria..."}
-          value={open ? query : ""}
+          placeholder="Pesquisar categoria..."
+          value={open ? query : value}
           onFocus={() => { setOpen(true); setQuery(""); }}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onChange={(e) => setQuery(e.target.value)}
@@ -414,21 +415,21 @@ export function OrderForm({ order }: Props) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="created_at">Criado em</Label>
-            <Input
-              id="created_at"
-              type="datetime-local"
-              value={form.created_at}
-              onChange={(e) => setField("created_at", e.target.value)}
+            <Label>Criado em</Label>
+            <DatePicker
+              value={form.created_at?.slice(0, 10)}
+              onChange={(d) =>
+                setField("created_at", d ? `${d}T${form.created_at?.slice(11, 16) || "00:00"}` : "")
+              }
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="updated_at">Atualizado em</Label>
-            <Input
-              id="updated_at"
-              type="datetime-local"
-              value={form.updated_at}
-              onChange={(e) => setField("updated_at", e.target.value)}
+            <Label>Atualizado em</Label>
+            <DatePicker
+              value={form.updated_at?.slice(0, 10)}
+              onChange={(d) =>
+                setField("updated_at", d ? `${d}T${form.updated_at?.slice(11, 16) || "00:00"}` : "")
+              }
             />
           </div>
         </div>
