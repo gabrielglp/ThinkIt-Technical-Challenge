@@ -44,3 +44,4 @@ export function fetchOrderById(orderId: string): Promise<OrderDetail> {
 export function fetchMetrics(): Promise<Metrics> {
   return get<Metrics>("/metrics");
 }
+

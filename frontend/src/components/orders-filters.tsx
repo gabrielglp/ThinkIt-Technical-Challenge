@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateRangePicker } from "@/components/date-range-picker";
 import type { OrderFilters, OrderStatus } from "@/types";
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
@@ -61,20 +62,12 @@ export function OrdersFilters({ filters, onChange, onClear }: OrdersFiltersProps
           </SelectContent>
         </Select>
 
-        <Input
-          type="date"
-          placeholder="De"
-          value={filters.date_from ?? ""}
-          onChange={(e) => onChange({ ...filters, date_from: e.target.value || undefined, page: 1 })}
-          className="w-[160px]"
-        />
-
-        <Input
-          type="date"
-          placeholder="Até"
-          value={filters.date_to ?? ""}
-          onChange={(e) => onChange({ ...filters, date_to: e.target.value || undefined, page: 1 })}
-          className="w-[160px]"
+        <DateRangePicker
+          startDate={filters.date_from}
+          endDate={filters.date_to}
+          onChange={(start, end) =>
+            onChange({ ...filters, date_from: start, date_to: end, page: 1 })
+          }
         />
 
         <Input
