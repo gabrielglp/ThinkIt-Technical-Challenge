@@ -1,13 +1,12 @@
 import io
 import uuid
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 import pandas as pd
-from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.storage import upload_bytes
 from etl.loader import load
 from etl.transformer import transform
@@ -41,6 +40,9 @@ class NoValidRowsError(Exception):
 
 
 class ImportOrdersCsvUseCase:
+    def __init__(self, session_factory: Callable[[], Session]) -> None:
+        self._session_factory = session_factory
+
     async def execute(self, filename: str, content: bytes) -> ImportReport:
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
         safe_name = filename.replace(" ", "_")
@@ -71,8 +73,7 @@ class ImportOrdersCsvUseCase:
 
         entities = transform(valid_rows)
 
-        engine = create_engine(settings.database_url_sync, echo=False)
-        with Session(engine) as session:
+        with self._session_factory() as session:
             with session.begin():
                 etl_report = load(session, entities)
 

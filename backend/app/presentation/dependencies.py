@@ -15,7 +15,7 @@ from app.application.use_cases.register_user import RegisterUserUseCase
 from app.application.use_cases.update_order import UpdateOrderUseCase
 from app.core.security import decode_access_token
 from app.domain.entities import User
-from app.infrastructure.database import get_db_session
+from app.infrastructure.database import get_db_session, sync_session_factory
 from app.infrastructure.repositories import SQLAlchemyMetricsRepository, SQLAlchemyOrderRepository, SQLAlchemyUserRepository
 
 _bearer = HTTPBearer()
@@ -90,4 +90,4 @@ def get_reset_password_use_case(
 
 
 def get_import_orders_csv_use_case() -> ImportOrdersCsvUseCase:
-    return ImportOrdersCsvUseCase()
+    return ImportOrdersCsvUseCase(sync_session_factory)

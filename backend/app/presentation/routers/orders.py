@@ -41,6 +41,8 @@ router = APIRouter()
     responses={
         200: {"description": "Lista paginada de pedidos."},
         422: {"description": "Parâmetros de filtro inválidos."},
+        429: {"description": "Muitas requisições. Tente novamente em breve."},
+        500: {"description": "Erro interno do servidor."},
     },
 )
 async def list_orders(
@@ -86,6 +88,8 @@ async def list_orders(
         201: {"description": "Pedido criado com sucesso."},
         401: {"description": "Token ausente ou inválido."},
         422: {"description": "Dados do pedido inválidos."},
+        429: {"description": "Muitas requisições. Tente novamente em breve."},
+        500: {"description": "Erro interno do servidor."},
     },
 )
 async def create_order(
@@ -106,6 +110,8 @@ async def create_order(
         200: {"description": "Detalhes do pedido."},
         404: {"description": "Pedido não encontrado."},
         422: {"description": "Formato de ID inválido (esperado: ORD-NNNNN)."},
+        429: {"description": "Muitas requisições. Tente novamente em breve."},
+        500: {"description": "Erro interno do servidor."},
     },
 )
 async def get_order(
@@ -128,6 +134,8 @@ async def get_order(
         401: {"description": "Token ausente ou inválido."},
         404: {"description": "Pedido não encontrado."},
         422: {"description": "Dados inválidos ou formato de ID incorreto."},
+        429: {"description": "Muitas requisições. Tente novamente em breve."},
+        500: {"description": "Erro interno do servidor."},
     },
 )
 async def update_order(
@@ -155,6 +163,7 @@ async def update_order(
         200: {"description": "Importação concluída. Relatório com válidos, inválidos, erros e s3_key."},
         401: {"description": "Token ausente ou inválido."},
         422: {"description": "Arquivo inválido, não-CSV ou nenhuma linha processável."},
+        429: {"description": "Muitas requisições. Tente novamente em breve."},
         500: {"description": "Falha ao fazer upload para o S3."},
     },
 )

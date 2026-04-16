@@ -17,6 +17,7 @@ router = APIRouter()
     ),
     responses={
         200: {"description": "Métricas calculadas com sucesso."},
+        429: {"description": "Muitas requisições. Tente novamente em breve."},
         500: {"description": "Erro ao calcular métricas."},
     },
 )
