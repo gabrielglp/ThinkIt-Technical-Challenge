@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-[calc(100vh-56px)] items-center justify-center p-8">
+      <div className="flex min-h-screen items-center justify-center p-8">
         <div className="w-full max-w-sm space-y-6 text-center">
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Senha redefinida!</h1>
@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-56px)]">
+    <div className="flex min-h-screen">
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-primary p-12 text-primary-foreground">
         <div className="flex items-center gap-2 text-lg font-semibold">
           <span>⬡</span>
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
           </blockquote>
           <p className="text-sm opacity-70">Plataforma de gestão de pedidos</p>
         </div>
-        <p className="text-xs opacity-50">© 2024 Função extra</p>
+        <p className="text-xs opacity-50">© 2026 Função extra</p>
       </div>
 
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
