@@ -50,46 +50,6 @@ The application will be available at the URLs below as soon as the containers ar
 docker compose exec api pytest tests/ -v
 ```
 
-## ⭐ Extra features — beyond the spec
-
-The challenge required three read endpoints, an ETL script and a dashboard. Everything below was built on top of that, without being asked.
-
-### Authentication system
-
-A full JWT-based auth flow was implemented end-to-end:
-
-| Feature | Details |
-|---|---|
-| Register | `POST /auth/register` — creates account, returns JWT |
-| Login | `POST /auth/login` — validates credentials, returns JWT |
-| Forgot password | `POST /auth/forgot-password` — sends reset link via SMTP email |
-| Reset password | `POST /auth/reset-password/{token}` — validates signed JWT token (30 min TTL, type claim `"reset"`), updates password |
-| Protected routes | `POST /orders`, `PUT /orders/{id}`, `POST /orders/import` require Bearer token |
-
-### Write endpoints
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/orders` | Create a new order with full customer + item data |
-| `PUT` | `/orders/{order_id}` | Edit an existing order (items replaced entirely) |
-| `POST` | `/orders/import` | Upload a CSV, process it through the ETL and return a report |
-
-The frontend exposes a full order create/edit form with CEP auto-fill (ViaCEP), currency mask, category search dropdown and status selector.
-
-### CSV import via UI
-
-Authenticated users can upload a `.csv` file directly from the dashboard. The file is uploaded to a **Storj S3-compatible bucket** before ETL processing, keeping a permanent record of every import. The response includes row counts (valid, invalid, errors) and the S3 key.
-
-### Security hardening
-
-Several security measures were added beyond what the spec requires:
-
-- **Rate limiting** — `slowapi` limits login to 5 req/min, register to 10 req/min and forgot-password to 3 req/min per IP (HTTP 429)
-- **Timing-safe login** — bcrypt is always executed even when the e-mail does not exist, preventing user enumeration via response timing
-- **Security headers** — every response includes `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy` and `Permissions-Policy`
-- **Password strength** — minimum 8 characters with at least one digit, enforced on both backend (Pydantic `field_validator`) and frontend (Zod schema)
-- **Zod validation** — all frontend forms (login, register, forgot-password, reset-password, order form) validate with Zod before sending any request, with inline field-level error messages
-
 ## API Endpoints
 
 | Method | Path | Description |
@@ -172,6 +132,44 @@ Errors are written to `etl_errors.log` and a summary to `etl_report.json`.
 **Bun as package manager** — faster installs, native lockfile, compatible with Next.js 16.
 
 **Multi-stage Docker builds** — builder stages include compilers and dev dependencies; the runtime image copies only the compiled output, resulting in a smaller final image.
+
+## ⭐ Extra features — beyond the spec
+
+The challenge required three read endpoints, an ETL script and a dashboard. Everything below was built on top of that, without being asked.
+
+### Authentication system
+
+A full JWT-based auth flow was implemented end-to-end:
+
+| Feature | Details |
+|---|---|
+| Register | `POST /auth/register` — creates account, returns JWT |
+| Login | `POST /auth/login` — validates credentials, returns JWT |
+| Forgot password | `POST /auth/forgot-password` — sends reset link via SMTP email |
+| Reset password | `POST /auth/reset-password/{token}` — validates signed JWT token (30 min TTL, type claim `"reset"`), updates password |
+| Protected routes | `POST /orders`, `PUT /orders/{id}`, `POST /orders/import` require Bearer token |
+
+### Write endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/orders` | Create a new order with full customer + item data |
+| `PUT` | `/orders/{order_id}` | Edit an existing order (items replaced entirely) |
+| `POST` | `/orders/import` | Upload a CSV, process it through the ETL and return a report |
+
+The frontend exposes a full order create/edit form with CEP auto-fill (ViaCEP), currency mask, category search dropdown and status selector.
+
+### CSV import via UI
+
+Authenticated users can upload a `.csv` file directly from the dashboard. The file is uploaded to a **Storj S3-compatible bucket** before ETL processing, keeping a permanent record of every import. The response includes row counts (valid, invalid, errors) and the S3 key.
+
+### Security hardening
+
+- **Rate limiting** — `slowapi` limits login to 5 req/min, register to 10 req/min and forgot-password to 3 req/min per IP (HTTP 429)
+- **Timing-safe login** — bcrypt is always executed even when the e-mail does not exist, preventing user enumeration via response timing
+- **Security headers** — every response includes `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy` and `Permissions-Policy`
+- **Password strength** — minimum 8 characters with at least one digit, enforced on both backend (Pydantic `field_validator`) and frontend (Zod schema)
+- **Zod validation** — all frontend forms validate with Zod before sending any request, with inline field-level error messages
 
 ## What I would do differently
 
