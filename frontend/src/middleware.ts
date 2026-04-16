@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PROTECTED = [
-  /^\/orders\/new$/,
-  /^\/orders\/[^/]+\/edit$/,
+  /^\/dashboard\/new$/,
+  /^\/dashboard\/[^/]+\/edit$/,
 ];
 
 export function middleware(request: NextRequest) {
@@ -21,5 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/orders/new", "/orders/:id/edit"],
+  matcher: ["/dashboard/new", "/dashboard/:id/edit"],
 };

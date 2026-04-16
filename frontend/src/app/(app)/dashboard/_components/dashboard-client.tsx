@@ -218,7 +218,7 @@ export function DashboardClient() {
                     <span className="hidden sm:inline">Importar CSV</span>
                   </Button>
                   <Button size="sm" asChild className="gap-2">
-                    <Link href="/orders/new">
+                    <Link href="/dashboard/new">
                       <Plus className="h-4 w-4" />
                       <span className="hidden sm:inline">Novo pedido</span>
                     </Link>

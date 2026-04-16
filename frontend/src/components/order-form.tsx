@@ -290,7 +290,7 @@ export function OrderForm({ order }: Props) {
         await createOrder(payload, token);
         toast({ title: "Pedido criado com sucesso!" });
       }
-      router.push("/orders");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       toast({

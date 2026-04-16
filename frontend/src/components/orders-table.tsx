@@ -53,7 +53,7 @@ export function OrdersTable({ orders, pageSize }: OrdersTableProps) {
               <TableRow key={order.order_id} className={ROW_HEIGHT}>
                 <TableCell>
                   <Link
-                    href={`/orders/${order.order_id}`}
+                    href={`/dashboard/${order.order_id}`}
                     className="font-mono text-sm font-medium text-primary hover:underline"
                   >
                     {order.order_id}
@@ -70,13 +70,13 @@ export function OrdersTable({ orders, pageSize }: OrdersTableProps) {
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
                     {isAuthenticated && (
-                      <Link href={`/orders/${order.order_id}/edit`}>
+                      <Link href={`/dashboard/${order.order_id}/edit`}>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
                     )}
-                    <Link href={`/orders/${order.order_id}`}>
+                    <Link href={`/dashboard/${order.order_id}`}>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Eye className="h-4 w-4" />
                       </Button>

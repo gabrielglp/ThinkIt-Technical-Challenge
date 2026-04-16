@@ -35,7 +35,7 @@ export function OrderDetailClient({ orderId }: OrderDetailClientProps) {
   if (isError || !order) {
     return (
       <div className="container mx-auto px-4 py-8 space-y-4">
-        <Link href="/orders">
+        <Link href="/dashboard">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Voltar
@@ -53,7 +53,7 @@ export function OrderDetailClient({ orderId }: OrderDetailClientProps) {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/orders">
+        <Link href="/dashboard">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Voltar
@@ -73,7 +73,7 @@ export function OrderDetailClient({ orderId }: OrderDetailClientProps) {
         <div className="flex items-center gap-3">
           <StatusBadge status={order.status} />
           {isAuthenticated && (
-            <Link href={`/orders/${order.order_id}/edit`}>
+            <Link href={`/dashboard/${order.order_id}/edit`}>
               <Button variant="outline" size="sm" className="gap-2">
                 <Pencil className="h-4 w-4" />
                 Editar

@@ -42,7 +42,7 @@ export default function LoginPage() {
       const data = await loginUser(email, password);
       login(data);
       toast({ title: "Login realizado com sucesso!" });
-      router.push("/orders");
+      router.push("/dashboard");
     } catch {
       toast({ title: "E-mail ou senha inválidos.", variant: "destructive" });
     } finally {

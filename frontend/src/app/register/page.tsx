@@ -43,7 +43,7 @@ export default function RegisterPage() {
       const data = await registerUser(name, email, password);
       login(data);
       toast({ title: "Conta criada com sucesso!", description: `Bem-vindo, ${name}!` });
-      router.push("/orders");
+      router.push("/dashboard");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("409") || msg.toLowerCase().includes("already")) {
