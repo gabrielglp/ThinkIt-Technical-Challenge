@@ -53,7 +53,7 @@ class SQLAlchemyOrderRepository:
         filters: OrderFilters,
         pagination: Pagination,
     ) -> PaginatedResult[Order]:
-        params: dict = {
+        params: dict[str, object] = {
             "status": filters.status.value if filters.status else None,
             "date_from": filters.date_from,
             "date_to": filters.date_to,

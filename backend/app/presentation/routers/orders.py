@@ -1,13 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.application.use_cases.get_order_by_id import GetOrderByIdUseCase
 from app.application.use_cases.list_orders import ListOrdersUseCase
 from app.domain.value_objects import OrderFilters, OrderStatus, Pagination
 from app.presentation.dependencies import get_list_orders_use_case, get_order_by_id_use_case
-from app.presentation.schemas.order_schemas import OrderDetailSchema, OrderItemSchema, PaginatedOrdersSchema, OrderSchema, CustomerSchema
+from app.presentation.schemas.order_schemas import OrderDetailSchema, OrderSchema, PaginatedOrdersSchema
 
 router = APIRouter()
 
@@ -36,18 +36,7 @@ async def list_orders(
     result = await use_case.execute(filters, pagination)
 
     return PaginatedOrdersSchema(
-        items=[
-            OrderSchema(
-                order_id=o.order_id,
-                customer_id=o.customer_id,
-                customer_name=o.customer_name,
-                status=o.status,
-                created_at=o.created_at,
-                updated_at=o.updated_at,
-                total_amount=float(o.total_amount),
-            )
-            for o in result.items
-        ],
+        items=[OrderSchema.model_validate(o) for o in result.items],
         total=result.total,
         page=result.page,
         page_size=result.page_size,
@@ -59,7 +48,7 @@ async def list_orders(
 
 @router.get("/{order_id}", response_model=OrderDetailSchema)
 async def get_order(
-    order_id: str,
+    order_id: str = Path(..., pattern=r"^ORD-\d+$", description="ID do pedido (ex: ORD-00756)"),
     use_case: GetOrderByIdUseCase = Depends(get_order_by_id_use_case),
 ) -> OrderDetailSchema:
     order = await use_case.execute(order_id)
@@ -67,30 +56,4 @@ async def get_order(
     if not order:
         raise HTTPException(status_code=404, detail=f"Pedido '{order_id}' não encontrado.")
 
-    return OrderDetailSchema(
-        order_id=order.order_id,
-        customer=CustomerSchema(
-            customer_id=order.customer.customer_id,
-            customer_name=order.customer.customer_name,
-            customer_email=order.customer.customer_email,
-            city=order.customer.city,
-            state=order.customer.state,
-        ),
-        status=order.status,
-        created_at=order.created_at,
-        updated_at=order.updated_at,
-        items=[
-            OrderItemSchema(
-                id=item.id,
-                product_id=item.product_id,
-                product_name=item.product_name,
-                category=item.category,
-                quantity=item.quantity,
-                unit_price=float(item.unit_price),
-                discount_pct=float(item.discount_pct),
-                total_price=float(item.total_price),
-            )
-            for item in order.items
-        ],
-        total_amount=float(order.total_amount),
-    )
+    return OrderDetailSchema.model_validate(order)

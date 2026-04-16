@@ -17,18 +17,6 @@ async def get_metrics(
         average_ticket=float(metrics.average_ticket),
         total_orders=metrics.total_orders,
         total_revenue=float(metrics.total_revenue),
-        top_products=[
-            TopProductSchema(
-                product_id=p.product_id,
-                product_name=p.product_name,
-                category=p.category,
-                total_revenue=float(p.total_revenue),
-                total_quantity=p.total_quantity,
-            )
-            for p in metrics.top_products
-        ],
-        orders_by_status=[
-            StatusCountSchema(status=s.status, count=s.count)
-            for s in metrics.orders_by_status
-        ],
+        top_products=[TopProductSchema.model_validate(p) for p in metrics.top_products],
+        orders_by_status=[StatusCountSchema.model_validate(s) for s in metrics.orders_by_status],
     )
