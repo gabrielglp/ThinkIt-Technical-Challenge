@@ -12,6 +12,7 @@ import {
   isSameMonth,
   isWithinInterval,
   parseISO,
+  setYear,
   startOfMonth,
   startOfWeek,
   subMonths,
@@ -38,6 +39,7 @@ export function DateRangePicker({
   placeholder = "Selecionar período",
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<"calendar" | "year">("calendar");
   const [viewMonth, setViewMonth] = useState(new Date());
   const [tempStart, setTempStart] = useState<Date | null>(
     startDate ? parseISO(startDate) : null
@@ -46,6 +48,10 @@ export function DateRangePicker({
     endDate ? parseISO(endDate) : null
   );
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
+
+  const currentYear = viewMonth.getFullYear();
+  const [yearPage, setYearPage] = useState(0);
+  const years = Array.from({ length: 12 }, (_, i) => currentYear - 5 + yearPage * 12 + i);
 
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(viewMonth), { weekStartsOn: 1 }),
@@ -114,8 +120,15 @@ export function DateRangePicker({
       setTempStart(startDate ? parseISO(startDate) : null);
       setTempEnd(endDate ? parseISO(endDate) : null);
       setViewMonth(startDate ? parseISO(startDate) : new Date());
+      setView("calendar");
+      setYearPage(0);
     }
     setOpen(value);
+  }
+
+  function handleYearSelect(year: number) {
+    setViewMonth(setYear(viewMonth, year));
+    setView("calendar");
   }
 
   const triggerLabel =
@@ -156,81 +169,136 @@ export function DateRangePicker({
           </div>
         )}
 
-        <div className="p-3">
+        <div className="p-3 w-[238px]">
+          {/* Header */}
           <div className="flex items-center justify-between mb-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setViewMonth(subMonths(viewMonth, 1))}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <span className="text-sm font-semibold capitalize">
-              {format(viewMonth, "MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-7 mb-1">
-            {WEEKDAYS.map((d, i) => (
-              <div
-                key={i}
-                className="h-8 flex items-center justify-center text-xs font-medium text-muted-foreground"
+            {view === "calendar" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setViewMonth(subMonths(viewMonth, 1))}
               >
-                {d}
-              </div>
-            ))}
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+
+            <button
+              className="text-sm font-semibold capitalize hover:text-emerald-600 transition-colors cursor-pointer mx-auto"
+              onClick={() => { setView(view === "year" ? "calendar" : "year"); setYearPage(0); }}
+            >
+              {format(viewMonth, "MMMM 'de' yyyy", { locale: ptBR })}
+            </button>
+
+            {view === "calendar" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setViewMonth(addMonths(viewMonth, 1))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
-          <div className="grid grid-cols-7">
-            {days.map((day, i) => {
-              const inRange = isInRange(day);
-              const rangeStart = isRangeStart(day);
-              const rangeEnd = isRangeEnd(day);
-              const isCurrentMonth = isSameMonth(day, viewMonth);
-              const isSelected = rangeStart || rangeEnd;
-
-              return (
-                <div
-                  key={i}
-                  className={cn(
-                    "h-8 flex items-center justify-center text-xs cursor-pointer relative",
-                    inRange && !isSelected && "bg-emerald-700",
-                    rangeStart && "rounded-l-full",
-                    rangeEnd && "rounded-r-full",
-                    !inRange && "rounded-full",
-                    !isCurrentMonth && "opacity-30"
-                  )}
-                  onClick={() => handleDayClick(day)}
-                  onMouseEnter={() => tempStart && !tempEnd && setHoverDate(day)}
-                  onMouseLeave={() => setHoverDate(null)}
+          {/* Year grid */}
+          {view === "year" && (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setYearPage((p) => p - 1)}
                 >
-                  <span
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {years[0]} – {years[years.length - 1]}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setYearPage((p) => p + 1)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-4 gap-1">
+                {years.map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => handleYearSelect(year)}
                     className={cn(
-                      "h-7 w-7 flex items-center justify-center rounded-full transition-colors",
-                      isSelected
-                        ? "bg-emerald-700 text-white font-semibold"
-                        : inRange
-                        ? "text-white hover:bg-emerald-600"
-                        : "hover:bg-muted"
+                      "w-full h-9 rounded-md text-sm font-medium transition-colors hover:bg-muted",
+                      year === currentYear && "bg-emerald-700 text-white hover:bg-emerald-800"
                     )}
                   >
-                    {format(day, "d")}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                    {year}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Calendar grid */}
+          {view === "calendar" && (
+            <>
+              <div className="grid grid-cols-7 mb-1">
+                {WEEKDAYS.map((d, i) => (
+                  <div
+                    key={i}
+                    className="h-8 flex items-center justify-center text-xs font-medium text-muted-foreground"
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7">
+                {days.map((day, i) => {
+                  const inRange = isInRange(day);
+                  const rangeStart = isRangeStart(day);
+                  const rangeEnd = isRangeEnd(day);
+                  const isCurrentMonth = isSameMonth(day, viewMonth);
+                  const isSelected = rangeStart || rangeEnd;
+                  const isMidRange = inRange && !isSelected;
+
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "h-8 flex items-center justify-center text-xs cursor-pointer relative",
+                        isMidRange && "bg-emerald-700/20",
+                        rangeStart && "rounded-l-full",
+                        rangeEnd && "rounded-r-full",
+                        !inRange && "rounded-full",
+                        !isCurrentMonth && "opacity-30"
+                      )}
+                      onClick={() => handleDayClick(day)}
+                      onMouseEnter={() => tempStart && !tempEnd && setHoverDate(day)}
+                      onMouseLeave={() => setHoverDate(null)}
+                    >
+                      <span
+                        className={cn(
+                          "h-7 w-7 flex items-center justify-center rounded-full transition-colors",
+                          isSelected
+                            ? "bg-emerald-700 text-white font-semibold"
+                            : isMidRange
+                            ? "text-foreground hover:bg-emerald-700/30"
+                            : "hover:bg-muted"
+                        )}
+                      >
+                        {format(day, "d")}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 px-3 pb-3">
