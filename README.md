@@ -41,6 +41,28 @@ The application will be available at the URLs below as soon as the containers ar
 | Swagger | http://localhost:8000/docs |
 | Health check | http://localhost:8000/health |
 
+## Live demo
+
+The application is deployed and accessible at:
+
+| Service | URL |
+|---|---|
+| Frontend | https://avant-glp.lat/dashboard |
+| API / Swagger | https://zaker.lat/docs |
+
+### Hosting
+
+The domain and infrastructure are managed through **[Atlas Hosting](https://atlashosting.com.br)** — a hosting platform I built myself with Next.js, featuring:
+
+- Domain registration integrated with the **Namecheap API**
+- DNS management via **deSEC** (free DNS provider with API)
+- Automated **SSL certificate** provisioning
+- Hosting plans with cPanel integration via **Plesk API**
+- One-click **WordPress** install through the WHMCS/Plesk XML API
+- Billing, payments and affiliate system
+
+The infrastructure runs on a VPS with **Docker Swarm + Traefik** for routing and automatic HTTPS.
+
 ### Running tests
 
 ```bash
@@ -93,8 +115,8 @@ Repository interfaces are defined as `Protocol` classes in the domain layer. The
 ```
 frontend/src/
 ├── app/
-│   ├── orders/          # Dashboard page (metrics, chart, table with filters)
-│   └── orders/[id]/     # Order detail page
+│   ├── dashboard/       # Dashboard page (metrics, chart, table with filters)
+│   └── dashboard/[id]/  # Order detail page
 ├── components/
 │   ├── ui/              # Shadcn/ui primitives
 │   └── *.tsx            # Domain-specific components
