@@ -50,6 +50,46 @@ The application will be available at the URLs below as soon as the containers ar
 docker compose exec api pytest tests/ -v
 ```
 
+## ⭐ Extra features — beyond the spec
+
+The challenge required three read endpoints, an ETL script and a dashboard. Everything below was built on top of that, without being asked.
+
+### Authentication system
+
+A full JWT-based auth flow was implemented end-to-end:
+
+| Feature | Details |
+|---|---|
+| Register | `POST /auth/register` — creates account, returns JWT |
+| Login | `POST /auth/login` — validates credentials, returns JWT |
+| Forgot password | `POST /auth/forgot-password` — sends reset link via SMTP email |
+| Reset password | `POST /auth/reset-password/{token}` — validates signed JWT token (30 min TTL, type claim `"reset"`), updates password |
+| Protected routes | `POST /orders`, `PUT /orders/{id}`, `POST /orders/import` require Bearer token |
+
+### Write endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/orders` | Create a new order with full customer + item data |
+| `PUT` | `/orders/{order_id}` | Edit an existing order (items replaced entirely) |
+| `POST` | `/orders/import` | Upload a CSV, process it through the ETL and return a report |
+
+The frontend exposes a full order create/edit form with CEP auto-fill (ViaCEP), currency mask, category search dropdown and status selector.
+
+### CSV import via UI
+
+Authenticated users can upload a `.csv` file directly from the dashboard. The file is uploaded to a **Storj S3-compatible bucket** before ETL processing, keeping a permanent record of every import. The response includes row counts (valid, invalid, errors) and the S3 key.
+
+### Security hardening
+
+Several security measures were added beyond what the spec requires:
+
+- **Rate limiting** — `slowapi` limits login to 5 req/min, register to 10 req/min and forgot-password to 3 req/min per IP (HTTP 429)
+- **Timing-safe login** — bcrypt is always executed even when the e-mail does not exist, preventing user enumeration via response timing
+- **Security headers** — every response includes `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy` and `Permissions-Policy`
+- **Password strength** — minimum 8 characters with at least one digit, enforced on both backend (Pydantic `field_validator`) and frontend (Zod schema)
+- **Zod validation** — all frontend forms (login, register, forgot-password, reset-password, order form) validate with Zod before sending any request, with inline field-level error messages
+
 ## API Endpoints
 
 | Method | Path | Description |
@@ -135,6 +175,10 @@ Errors are written to `etl_errors.log` and a summary to `etl_report.json`.
 
 ## What I would do differently
 
+**Role-based access control (RBAC)** — the `users` table and JWT claims are already in place. Adding a `role` field (`admin` / `viewer`) would allow restricting write operations to admins only, while viewers browse read-only. A super-admin role could manage accounts, create new users and assign roles — turning this into a multi-tenant panel.
+
+**Per-user data isolation** — currently all authenticated users share the same order list. With a `tenant_id` or `owner_id` column on `orders`, each user (or team) would only see their own data. A super-admin account would retain global visibility.
+
 **Event-driven ETL** — replace the one-shot script with a message queue (RabbitMQ or AWS SQS). New CSV files would be dropped into object storage, triggering an async worker. This enables retries, dead-letter queues and horizontal scaling without blocking the API.
 
 **Redis caching for metrics** — the `/metrics` endpoint aggregates the entire `order_items` table on every request. With Redis, results could be cached with a short TTL and invalidated on ETL completion.
@@ -143,4 +187,8 @@ Errors are written to `etl_errors.log` and a summary to `etl_report.json`.
 
 **Background jobs for reports** — heavy exports (CSV, PDF) should be queued and delivered asynchronously rather than blocking an HTTP request.
 
-**E2E tests with Playwright** — the integration tests cover the API contract but not the browser interaction. Playwright tests would validate filter behavior, pagination and navigation end-to-end.
+**Observability** — structured logging (JSON), distributed tracing (OpenTelemetry) and a metrics endpoint (Prometheus) would make production incidents much easier to diagnose.
+
+**E2E tests with Playwright** — the integration tests cover the API contract but not the browser interaction. Playwright tests would validate filter behavior, pagination, form flows and protected route redirects end-to-end.
+
+**Contract testing** — beyond integration tests, consumer-driven contract tests (Pact) would catch API breaking changes before they reach production, especially useful as the frontend and backend evolve independently.
